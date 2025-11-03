@@ -757,66 +757,66 @@
         };
 
         // Google Sheets API Handler
-        class GoogleSheetsAPI {
-            constructor() {
-                this.isInitialized = false;
-            }
+class GoogleSheetsAPI {
+  constructor() {
+    this.baseUrl = 'https://script.google.com/macros/s/AKfycbwCg9Cv6RMROwprBXH3M6xuFtkfS7FOKfPtDP-wAT_J6TgoEdHfbaZeUB9wGQkGlVdeRw/exec'; // ganti dengan URL Web App kamu
+  }
 
-            async init() {
-                if (!GOOGLE_CONFIG.API_KEY || !GOOGLE_CONFIG.SHEET_ID) {
-                    console.log('Google Sheets not configured, using localStorage');
-                    showConfigBanner();
-                    return { isOk: false, error: 'Not configured' };
-                }
+  async saveQuiz(quiz) {
+    console.log('Saving quiz via Apps Script...', quiz);
+    this.saveToLocalStorage(quiz); // backup lokal
 
-                try {
-                    // Check if gapi is available
-                    if (typeof gapi === 'undefined') {
-                        console.log('Google API library not loaded, using localStorage');
-                        showConfigBanner();
-                        return { isOk: false, error: 'Google API not available' };
-                    }
+    try {
+      const res = await fetch(this.baseUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(quiz)
+      });
+      const result = await res.json();
+      if (result.status === 'ok') {
+        showToast('☁️ Quiz saved to Google Sheet successfully!', 'success');
+        updateSyncStatus('synced');
+      } else {
+        showToast(`⚠️ Failed to save to Sheet: ${result.message}`, 'warning');
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('💾 Saved locally (Google Sheet unreachable).', 'error');
+      updateSyncStatus('error');
+    }
+  }
 
-                    // Load client with timeout
-                    await new Promise((resolve, reject) => {
-                        const timeout = setTimeout(() => {
-                            reject(new Error('gapi.load timeout'));
-                        }, 10000); // Increased timeout
-                        
-                        gapi.load('client', () => {
-                            clearTimeout(timeout);
-                            resolve();
-                        });
-                    });
+  async loadQuizzes() {
+    console.log('Loading quizzes from Apps Script...');
+    try {
+      const res = await fetch(this.baseUrl);
+      const result = await res.json();
+      if (result.status === 'ok') {
+        updateSyncStatus('synced');
+        localStorage.setItem('quiz-builder-data', JSON.stringify(result.quizzes));
+        return result.quizzes;
+      } else {
+        throw new Error(result.message);
+      }
+    } catch (err) {
+      console.error('Load failed:', err);
+      updateSyncStatus('error');
+      return this.loadFromLocalStorage();
+    }
+  }
 
-                    // Initialize client with timeout
-                    await Promise.race([
-                        gapi.client.init({
-                            apiKey: GOOGLE_CONFIG.API_KEY,
-                            discoveryDocs: [GOOGLE_CONFIG.DISCOVERY_DOC]
-                        }),
-                        new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('Client init timeout')), 10000) // Increased timeout
-                        )
-                    ]);
+  loadFromLocalStorage() {
+    const data = localStorage.getItem('quiz-builder-data');
+    return data ? JSON.parse(data) : [];
+  }
 
-                    // Test connection by trying to read the sheet
-                    const testResponse = await gapi.client.sheets.spreadsheets.values.get({
-                        spreadsheetId: GOOGLE_CONFIG.SHEET_ID,
-                        range: 'Sheet1!A1:A1'
-                    });
-
-                    this.isInitialized = true;
-                    console.log('Google Sheets API initialized and tested successfully');
-                    return { isOk: true };
-                } catch (error) {
-                    console.error('Failed to initialize Google Sheets API:', error);
-                    this.isInitialized = false;
-                    showConfigBanner();
-                    return { isOk: false, error };
-                }
-            }
-
+  saveToLocalStorage(quiz) {
+    const data = this.loadFromLocalStorage();
+    const i = data.findIndex(q => q.id === quiz.id);
+    if (i >= 0) data[i] = quiz; else data.push(quiz);
+    localStorage.setItem('quiz-builder-data', JSON.stringify(data));
+  }
+}
             async loadQuizzes() {
                 console.log('Loading quizzes, isInitialized:', this.isInitialized);
                 
