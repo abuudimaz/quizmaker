@@ -1,0 +1,1913 @@
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz Show Builder</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://apis.google.com/js/api.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+            min-height: 100%;
+            margin: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            overflow-x: hidden;
+        }
+        html {
+            height: 100%;
+        }
+        
+        .screen-container {
+            min-height: 100vh;
+            max-height: 100vh;
+            overflow-y: auto;
+            padding-bottom: 2rem;
+        }
+        .quiz-card {
+            transition: all 0.3s ease;
+        }
+        .quiz-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .mode-card {
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .mode-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        .mode-card.selected {
+            ring: 2px;
+            ring-color: #7c3aed;
+            background: linear-gradient(135deg, #f3f4f6, #e5e7eb);
+        }
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            margin: 0 0.25rem;
+            transition: all 0.3s ease;
+            font-size: 0.875rem;
+        }
+        
+        @media (max-width: 640px) {
+            .step {
+                padding: 0.375rem 0.75rem;
+                font-size: 0.75rem;
+            }
+            .step span:last-child {
+                display: none;
+            }
+        }
+        .step.active {
+            background: linear-gradient(135deg, #7c3aed, #3b82f6);
+            color: white;
+        }
+        .step.completed {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        .step.inactive {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .fade-in {
+            animation: fadeIn 0.2s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .config-banner {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            border: 2px solid #f59e0b;
+            border-radius: 0.75rem;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .config-step {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Custom Scrollbar Styling */
+        .overflow-y-auto::-webkit-scrollbar {
+            width: 8px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 4px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        
+        /* Firefox scrollbar */
+        .overflow-y-auto {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="min-h-full bg-gradient-to-br from-purple-50 to-blue-50">
+  <div id="app" class="min-h-full"><!-- Configuration Banner -->
+   <div id="config-banner" class="config-banner">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6">
+     <div class="flex items-start space-x-3">
+      <div class="text-2xl">
+       ⚙️
+      </div>
+      <div class="flex-1">
+       <h3 class="text-lg font-semibold text-amber-800 mb-2">Google Sheets Setup Required</h3>
+       <p class="text-amber-700 mb-3">To save your quizzes to Google Sheets, please complete the setup:</p>
+       <div class="space-y-2 mb-4">
+        <div class="config-step"><strong>1. Create Google Sheets API Key:</strong> <a href="https://console.developers.google.com/" target="_blank" class="text-blue-600 hover:underline ml-1">Google Cloud Console</a>
+        </div>
+        <div class="config-step"><strong>2. Create a Google Sheet</strong> and copy the Sheet ID from URL
+        </div>
+        <div class="config-step"><strong>3. Add header row:</strong> <code class="bg-gray-200 px-1 rounded text-sm">ID | Title | Description | Mode | Settings | Questions | Created | Count</code>
+        </div>
+       </div>
+       <div class="flex flex-wrap gap-3"><button onclick="showConfigModal()" class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors"> Configure Now </button> <button onclick="hideConfigBanner()" class="border border-amber-600 text-amber-600 px-4 py-2 rounded-lg hover:bg-amber-50 transition-colors"> Use Local Storage Only </button>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Configuration Modal -->
+   <div id="config-modal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
+    <div class="flex items-center justify-center min-h-full p-4">
+     <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden slide-in">
+      <div class="flex items-center justify-between p-6 border-b">
+       <h2 class="text-2xl font-bold text-gray-900">Google Sheets Configuration</h2><button onclick="hideConfigModal()" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 120px);">
+       <div class="space-y-4">
+        <div><label for="api-key-input" class="block text-sm font-medium text-gray-700 mb-2">Google API Key</label> <input type="text" id="api-key-input" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your Google API Key">
+         <p class="text-xs text-gray-500 mt-1">Get from Google Cloud Console → APIs &amp; Services → Credentials</p>
+        </div>
+        <div><label for="sheet-id-input" class="block text-sm font-medium text-gray-700 mb-2">Google Sheet ID</label> <input type="text" id="sheet-id-input" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your Google Sheet ID">
+         <p class="text-xs text-gray-500 mt-1">From Sheet URL: docs.google.com/spreadsheets/d/<strong>SHEET_ID</strong>/edit</p>
+        </div>
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+         <h4 class="font-semibold text-blue-800 mb-2">Setup Instructions:</h4>
+         <ol class="text-sm text-blue-700 space-y-1 list-decimal list-inside">
+          <li>Go to <a href="https://console.developers.google.com/" target="_blank" class="underline">Google Cloud Console</a></li>
+          <li>Create/select a project → Enable Sheets API</li>
+          <li>Create API Key in Credentials</li>
+          <li>Create a new Google Sheet</li>
+          <li>Make sheet public (Share → Anyone with link can view)</li>
+          <li>Add header row: ID, Title, Description, Mode, Settings, Questions, Created, Count</li>
+         </ol>
+        </div>
+       </div>
+       <div class="flex justify-between mt-6"><button onclick="testConnection()" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"> Test Connection </button>
+        <div class="space-x-3"><button onclick="hideConfigModal()" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors"> Cancel </button> <button onclick="saveConfiguration()" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"> Save Configuration </button>
+        </div>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Main Dashboard -->
+   <div id="dashboard" class="screen-container overflow-y-auto"><!-- Header -->
+    <header class="bg-white shadow-sm border-b">
+     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <div class="flex items-center justify-between">
+       <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center"><span class="text-white font-bold text-lg">Q</span>
+        </div>
+        <h1 id="app-title" class="text-2xl font-bold text-gray-900">Quiz Show Builder</h1>
+       </div>
+       <div class="flex items-center space-x-3">
+        <div id="sync-status" class="flex items-center space-x-2 text-sm">
+         <div id="sync-indicator" class="w-3 h-3 rounded-full bg-gray-400"></div><span id="sync-text" class="text-gray-600">Local Storage</span>
+        </div><button id="create-quiz-btn" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-2 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl"> Create New Quiz </button>
+       </div>
+      </div>
+     </div>
+    </header><!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><!-- Welcome Section -->
+     <div class="text-center mb-12">
+      <h2 id="welcome-message" class="text-4xl font-bold text-gray-900 mb-4">Create amazing quiz shows in minutes!</h2>
+      <p class="text-xl text-gray-600 max-w-2xl mx-auto">Build engaging quizzes with multiple game show formats: Jeopardy, Family Feud, Millionaire, and more!</p>
+     </div><!-- Stats Cards -->
+     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div class="bg-white rounded-xl p-6 shadow-lg">
+       <div class="flex items-center">
+        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center"><span class="text-2xl">📝</span>
+        </div>
+        <div class="ml-4">
+         <p class="text-sm font-medium text-gray-600">Total Quizzes</p>
+         <p id="total-quizzes" class="text-2xl font-bold text-gray-900">0</p>
+        </div>
+       </div>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow-lg">
+       <div class="flex items-center">
+        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center"><span class="text-2xl">❓</span>
+        </div>
+        <div class="ml-4">
+         <p class="text-sm font-medium text-gray-600">Total Questions</p>
+         <p id="total-questions" class="text-2xl font-bold text-gray-900">0</p>
+        </div>
+       </div>
+      </div>
+      <div class="bg-white rounded-xl p-6 shadow-lg">
+       <div class="flex items-center">
+        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center"><span class="text-2xl">🎮</span>
+        </div>
+        <div class="ml-4">
+         <p class="text-sm font-medium text-gray-600">Game Modes</p>
+         <p class="text-2xl font-bold text-gray-900">4</p>
+        </div>
+       </div>
+      </div>
+     </div><!-- Quiz Grid -->
+     <div class="mb-8">
+      <div class="flex items-center justify-between mb-6">
+       <h3 class="text-2xl font-bold text-gray-900">Your Quiz Shows</h3>
+       <div class="flex space-x-3"><button onclick="syncWithGoogleSheets()" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors text-sm"> 🔄 Sync </button> <button onclick="exportQuizzes()" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition-colors text-sm"> 📥 Export </button>
+       </div>
+      </div>
+      <div id="quiz-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"><!-- Quiz cards will be inserted here -->
+      </div>
+      <div id="empty-state" class="text-center py-12 hidden">
+       <div class="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><span class="text-4xl text-gray-400">🎪</span>
+       </div>
+       <h3 class="text-xl font-medium text-gray-900 mb-2">No quiz shows yet</h3>
+       <p class="text-gray-600 mb-6">Create your first quiz show to get started!</p><button class="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200" onclick="startCreateProcess()"> Create Your First Quiz Show </button>
+      </div>
+     </div>
+    </main>
+   </div><!-- Step 1: Mode Selection -->
+   <div id="step1-mode-selection" class="hidden screen-container overflow-y-auto">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8"><!-- Step Indicator -->
+     <div class="step-indicator">
+      <div class="step active"><span class="mr-2">1</span> <span>Choose Mode</span>
+      </div>
+      <div class="step inactive"><span class="mr-2">2</span> <span>Settings</span>
+      </div>
+      <div class="step inactive"><span class="mr-2">3</span> <span>Questions</span>
+      </div>
+     </div>
+     <div class="bg-white rounded-xl shadow-lg p-8">
+      <div class="flex items-center justify-between mb-8">
+       <h1 class="text-3xl font-bold text-gray-900">Step 1: Choose Quiz Show Format</h1><button id="back-to-dashboard" class="text-gray-500 hover:text-gray-700 text-xl">×</button>
+      </div>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8"><!-- Jeopardy Mode -->
+       <div class="mode-card bg-gradient-to-br from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-xl p-6" onclick="selectMode('jeopardy')" data-mode="jeopardy">
+        <div class="text-center">
+         <div class="text-6xl mb-4">
+          🎯
+         </div>
+         <h3 class="text-2xl font-bold text-blue-800 mb-2">Jeopardy</h3>
+         <p class="text-blue-600 mb-4">Classic format with categories and point values</p>
+         <ul class="text-sm text-blue-700 text-left space-y-1">
+          <li>• Category board with point values</li>
+          <li>• Teams choose questions by value</li>
+          <li>• Multiple choice answers</li>
+          <li>• Scoring system</li>
+         </ul>
+        </div>
+       </div><!-- Family Feud Mode -->
+       <div class="mode-card bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-200 rounded-xl p-6" onclick="selectMode('family')" data-mode="family">
+        <div class="text-center">
+         <div class="text-6xl mb-4">
+          👨‍👩‍👧‍👦
+         </div>
+         <h3 class="text-2xl font-bold text-red-800 mb-2">Family Feud</h3>
+         <p class="text-red-600 mb-4">Survey-based answers with popularity points</p>
+         <ul class="text-sm text-red-700 text-left space-y-1">
+          <li>• Survey questions with multiple answers</li>
+          <li>• Each answer has popularity points</li>
+          <li>• Strike system for wrong answers</li>
+          <li>• Team competition format</li>
+         </ul>
+        </div>
+       </div><!-- Who Wants to be a Millionaire -->
+       <div class="mode-card bg-gradient-to-br from-yellow-50 to-orange-50 border-2 border-yellow-200 rounded-xl p-6" onclick="selectMode('millionaire')" data-mode="millionaire">
+        <div class="text-center">
+         <div class="text-6xl mb-4">
+          💰
+         </div>
+         <h3 class="text-2xl font-bold text-yellow-800 mb-2">Who Wants to be a Millionaire</h3>
+         <p class="text-yellow-600 mb-4">Progressive difficulty with lifelines</p>
+         <ul class="text-sm text-yellow-700 text-left space-y-1">
+          <li>• 15 questions with increasing difficulty</li>
+          <li>• Multiple choice format</li>
+          <li>• Lifeline system available</li>
+          <li>• Money ladder progression</li>
+         </ul>
+        </div>
+       </div><!-- Are You Smarter than a 5th Grader -->
+       <div class="mode-card bg-gradient-to-br from-green-50 to-teal-50 border-2 border-green-200 rounded-xl p-6" onclick="selectMode('grader')" data-mode="grader">
+        <div class="text-center">
+         <div class="text-6xl mb-4">
+          🎓
+         </div>
+         <h3 class="text-2xl font-bold text-green-800 mb-2">Are You Smarter than a 5th Grader?</h3>
+         <p class="text-green-600 mb-4">Grade-level questions with student help</p>
+         <ul class="text-sm text-green-700 text-left space-y-1">
+          <li>• Questions organized by grade level</li>
+          <li>• Multiple choice format</li>
+          <li>• Virtual student helpers</li>
+          <li>• Educational content focus</li>
+         </ul>
+        </div>
+       </div>
+      </div>
+      <div class="text-center sticky bottom-4 bg-white p-4 rounded-lg shadow-lg border"><button id="continue-to-settings" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" disabled> Continue to Settings → </button>
+      </div>
+     </div>
+    </div>
+   </div><!-- Step 2: Settings -->
+   <div id="step2-settings" class="hidden screen-container overflow-y-auto">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-4 sm:py-8"><!-- Step Indicator -->
+     <div class="step-indicator">
+      <div class="step completed"><span class="mr-2">✓</span> <span>Choose Mode</span>
+      </div>
+      <div class="step active"><span class="mr-2">2</span> <span>Settings</span>
+      </div>
+      <div class="step inactive"><span class="mr-2">3</span> <span>Questions</span>
+      </div>
+     </div>
+     <div class="bg-white rounded-xl shadow-lg p-8">
+      <div class="flex items-center justify-between mb-8">
+       <h1 class="text-3xl font-bold text-gray-900">Step 2: Quiz Settings</h1><button id="back-to-mode" class="text-gray-500 hover:text-gray-700">← Back</button>
+      </div><!-- Selected Mode Display -->
+      <div id="selected-mode-display" class="bg-gray-50 rounded-lg p-4 mb-6">
+       <h3 class="font-semibold text-gray-900 mb-2">Selected Mode:</h3>
+       <div id="mode-info" class="flex items-center space-x-3"><!-- Mode info will be inserted here -->
+       </div>
+      </div><!-- Basic Settings -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+       <div><label for="quiz-title" class="block text-sm font-medium text-gray-700 mb-2">Quiz Title *</label> <input type="text" id="quiz-title" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter quiz title">
+       </div>
+       <div><label for="time-limit" class="block text-sm font-medium text-gray-700 mb-2">Time per Question (seconds)</label> <input type="number" id="time-limit" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" value="30" min="10" max="300">
+       </div>
+      </div>
+      <div class="mb-6"><label for="quiz-description" class="block text-sm font-medium text-gray-700 mb-2">Description</label> <textarea id="quiz-description" rows="3" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter quiz description"></textarea>
+      </div><!-- Mode-specific Settings -->
+      <div id="mode-specific-settings" class="mb-6"><!-- Settings will be inserted based on selected mode -->
+      </div>
+      <div class="flex justify-between sticky bottom-4 bg-white p-4 rounded-lg shadow-lg border"><button id="back-to-mode-btn" class="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"> ← Back to Mode Selection </button> <button id="continue-to-questions" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"> Continue to Questions → </button>
+      </div>
+     </div>
+    </div>
+   </div><!-- Step 3: Questions -->
+   <div id="step3-questions" class="hidden screen-container overflow-y-auto">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-4 sm:py-8"><!-- Step Indicator -->
+     <div class="step-indicator">
+      <div class="step completed"><span class="mr-2">✓</span> <span>Choose Mode</span>
+      </div>
+      <div class="step completed"><span class="mr-2">✓</span> <span>Settings</span>
+      </div>
+      <div class="step active"><span class="mr-2">3</span> <span>Questions</span>
+      </div>
+     </div>
+     <div class="bg-white rounded-xl shadow-lg p-8">
+      <div class="flex items-center justify-between mb-8">
+       <h1 class="text-3xl font-bold text-gray-900">Step 3: Add Questions</h1><button id="back-to-settings" class="text-gray-500 hover:text-gray-700">← Back</button>
+      </div><!-- Import Section -->
+      <div class="mb-8 bg-gradient-to-r from-green-50 to-teal-50 rounded-lg p-6 border border-green-200">
+       <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center"><span class="text-2xl mr-3">📁</span> Import Questions</h3>
+       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div>
+         <div class="space-y-4">
+          <div><label class="block text-sm font-medium text-gray-700 mb-2">Import from File</label>
+           <div class="flex items-center space-x-3"><input type="file" id="import-file" accept=".json,.csv,.txt" class="hidden"> <button onclick="document.getElementById('import-file').click()" class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"> Choose File </button> <span id="file-name" class="text-sm text-gray-600">No file selected</span>
+           </div>
+          </div>
+          <div><label for="import-text" class="block text-sm font-medium text-gray-700 mb-2">Or Paste Questions</label> <textarea id="import-text" rows="4" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent text-sm" placeholder="Paste your questions here..."></textarea>
+          </div>
+          <div class="flex space-x-2"><button id="import-questions" class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"> Import Questions </button> <button id="show-import-format" class="border border-green-600 text-green-600 px-4 py-2 rounded-lg font-medium hover:bg-green-50 transition-colors"> Show Format </button>
+          </div>
+         </div>
+        </div>
+        <div id="format-preview" class="bg-white rounded-lg p-4 border">
+         <h4 class="font-semibold text-gray-900 mb-2">Expected Format:</h4>
+         <div id="format-example" class="text-sm text-gray-600"><!-- Format example will be inserted based on selected mode -->
+         </div>
+        </div>
+       </div>
+      </div><!-- Questions List -->
+      <div class="mb-6">
+       <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Questions</h3>
+        <div class="flex space-x-3"><button id="clear-all-questions" class="bg-red-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-700 transition-colors"> Clear All </button> <button id="add-question-btn" class="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"> + Add Question </button>
+        </div>
+       </div>
+       <div id="questions-container" class="space-y-4"><!-- Questions will be added here -->
+       </div>
+      </div>
+      <div class="flex justify-between sticky bottom-4 bg-white p-4 rounded-lg shadow-lg border"><button id="back-to-settings-btn" class="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition-colors"> ← Back to Settings </button> <button id="save-quiz" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"> Save Quiz Show </button>
+      </div>
+     </div>
+    </div>
+   </div><!-- Import Format Modal -->
+   <div id="import-format-modal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
+    <div class="flex items-center justify-center min-h-full p-4">
+     <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden slide-in">
+      <div class="flex items-center justify-between p-6 border-b">
+       <h2 class="text-2xl font-bold text-gray-900">Import Format Examples</h2><button id="close-format-modal" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 120px);">
+       <div id="format-examples-content"><!-- Format examples will be inserted based on selected mode -->
+       </div>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+        // Global state
+        let quizzes = [];
+        let currentQuiz = null;
+        let editingQuizId = null;
+        let selectedMode = null;
+        let quizSettings = {};
+        let questionCount = 0;
+
+        // Google Sheets Configuration
+        let GOOGLE_CONFIG = {
+            API_KEY: localStorage.getItem('google-api-key') || '',
+            SHEET_ID: localStorage.getItem('google-sheet-id') || '',
+            RANGE: 'Sheet1!A:H',
+            DISCOVERY_DOC: 'https://sheets.googleapis.com/$discovery/rest?version=v4'
+        };
+
+        let isGoogleApiLoaded = false;
+        let googleSheetsAPI = null;
+
+        // Default configuration
+        const defaultConfig = {
+            app_title: "Quiz Show Builder",
+            welcome_message: "Create amazing quiz shows in minutes!",
+            create_button_text: "Create New Quiz"
+        };
+
+        // Mode configurations
+        const modeConfigs = {
+            jeopardy: {
+                name: "Jeopardy",
+                icon: "🎯",
+                color: "blue",
+                description: "Classic format with categories and point values",
+                questionFormat: "multiple_choice",
+                settings: {
+                    categories: { type: "number", label: "Number of Categories", default: 5, min: 3, max: 6 },
+                    teams: { type: "number", label: "Number of Teams", default: 3, min: 2, max: 4 }
+                }
+            },
+            family: {
+                name: "Family Feud",
+                icon: "👨‍👩‍👧‍👦",
+                color: "red",
+                description: "Survey-based answers with popularity points",
+                questionFormat: "survey",
+                settings: {
+                    families: { type: "number", label: "Number of Families", default: 2, min: 2, max: 2 },
+                    strikes: { type: "number", label: "Strikes per Round", default: 3, min: 2, max: 5 }
+                }
+            },
+            millionaire: {
+                name: "Who Wants to be a Millionaire",
+                icon: "💰",
+                color: "yellow",
+                description: "Progressive difficulty with lifelines",
+                questionFormat: "multiple_choice",
+                settings: {
+                    lifelines: { type: "checkbox", label: "Available Lifelines", options: ["50:50", "Phone a Friend", "Ask Audience"], default: ["50:50", "Phone a Friend", "Ask Audience"] }
+                }
+            },
+            grader: {
+                name: "Are You Smarter than a 5th Grader?",
+                icon: "🎓",
+                color: "green",
+                description: "Grade-level questions with student help",
+                questionFormat: "multiple_choice_graded",
+                settings: {
+                    grades: { type: "checkbox", label: "Grade Levels", options: ["1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"], default: ["1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"] }
+                }
+            }
+        };
+
+        // Google Sheets API Handler
+        class GoogleSheetsAPI {
+            constructor() {
+                this.isInitialized = false;
+            }
+
+            async init() {
+                if (!GOOGLE_CONFIG.API_KEY || !GOOGLE_CONFIG.SHEET_ID) {
+                    console.log('Google Sheets not configured, using localStorage');
+                    return { isOk: false, error: 'Not configured' };
+                }
+
+                try {
+                    await new Promise((resolve) => {
+                        gapi.load('client', resolve);
+                    });
+
+                    await gapi.client.init({
+                        apiKey: GOOGLE_CONFIG.API_KEY,
+                        discoveryDocs: [GOOGLE_CONFIG.DISCOVERY_DOC]
+                    });
+
+                    this.isInitialized = true;
+                    console.log('Google Sheets API initialized');
+                    updateSyncStatus('connected');
+                    return { isOk: true };
+                } catch (error) {
+                    console.error('Failed to initialize Google Sheets API:', error);
+                    updateSyncStatus('error');
+                    return { isOk: false, error };
+                }
+            }
+
+            async loadQuizzes() {
+                if (!this.isInitialized) {
+                    return this.loadFromLocalStorage();
+                }
+
+                try {
+                    const response = await gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: GOOGLE_CONFIG.SHEET_ID,
+                        range: GOOGLE_CONFIG.RANGE
+                    });
+
+                    const rows = response.result.values || [];
+                    if (rows.length === 0) return [];
+
+                    // Skip header row and convert to objects
+                    const quizzes = rows.slice(1).map(row => ({
+                        id: row[0] || '',
+                        title: row[1] || '',
+                        description: row[2] || '',
+                        mode: row[3] || '',
+                        settings: row[4] || '{}',
+                        questions: row[5] || '[]',
+                        created_at: row[6] || new Date().toISOString(),
+                        question_count: parseInt(row[7]) || 0
+                    })).filter(quiz => quiz.id);
+
+                    // Also save to localStorage as backup
+                    localStorage.setItem('quiz-builder-data', JSON.stringify(quizzes));
+                    updateSyncStatus('synced');
+                    return quizzes;
+                } catch (error) {
+                    console.error('Failed to load from Google Sheets:', error);
+                    showToast('Failed to load from Google Sheets, using local storage', 'warning');
+                    updateSyncStatus('error');
+                    return this.loadFromLocalStorage();
+                }
+            }
+
+            async saveQuiz(quiz) {
+                // Always save to localStorage first
+                this.saveToLocalStorage(quiz);
+
+                if (!this.isInitialized) {
+                    return { isOk: true };
+                }
+
+                try {
+                    // First, get current data to find if quiz exists
+                    const currentQuizzes = await this.loadQuizzes();
+                    const existingIndex = currentQuizzes.findIndex(q => q.id === quiz.id);
+
+                    const row = [
+                        quiz.id,
+                        quiz.title,
+                        quiz.description,
+                        quiz.mode,
+                        quiz.settings,
+                        quiz.questions,
+                        quiz.created_at,
+                        quiz.question_count
+                    ];
+
+                    if (existingIndex >= 0) {
+                        // Update existing row (add 2 to account for header and 0-based index)
+                        const rowNumber = existingIndex + 2;
+                        await gapi.client.sheets.spreadsheets.values.update({
+                            spreadsheetId: GOOGLE_CONFIG.SHEET_ID,
+                            range: `Sheet1!A${rowNumber}:H${rowNumber}`,
+                            valueInputOption: 'RAW',
+                            resource: {
+                                values: [row]
+                            }
+                        });
+                    } else {
+                        // Append new row
+                        await gapi.client.sheets.spreadsheets.values.append({
+                            spreadsheetId: GOOGLE_CONFIG.SHEET_ID,
+                            range: 'Sheet1!A:H',
+                            valueInputOption: 'RAW',
+                            resource: {
+                                values: [row]
+                            }
+                        });
+                    }
+
+                    updateSyncStatus('synced');
+                    return { isOk: true };
+                } catch (error) {
+                    console.error('Failed to save to Google Sheets:', error);
+                    showToast('Saved locally, sync to Google Sheets failed', 'warning');
+                    updateSyncStatus('error');
+                    return { isOk: true }; // Still return success since we saved locally
+                }
+            }
+
+            async deleteQuiz(quizId) {
+                // Always delete from localStorage first
+                this.deleteFromLocalStorage(quizId);
+
+                if (!this.isInitialized) {
+                    return { isOk: true };
+                }
+
+                try {
+                    // Get current data to find row to delete
+                    const response = await gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: GOOGLE_CONFIG.SHEET_ID,
+                        range: GOOGLE_CONFIG.RANGE
+                    });
+
+                    const rows = response.result.values || [];
+                    const rowIndex = rows.findIndex((row, index) => index > 0 && row[0] === quizId);
+
+                    if (rowIndex > 0) {
+                        // Clear the row (Google Sheets API doesn't have direct delete)
+                        const rowNumber = rowIndex + 1;
+                        await gapi.client.sheets.spreadsheets.values.clear({
+                            spreadsheetId: GOOGLE_CONFIG.SHEET_ID,
+                            range: `Sheet1!A${rowNumber}:H${rowNumber}`
+                        });
+                    }
+
+                    updateSyncStatus('synced');
+                    return { isOk: true };
+                } catch (error) {
+                    console.error('Failed to delete from Google Sheets:', error);
+                    showToast('Deleted locally, sync to Google Sheets failed', 'warning');
+                    updateSyncStatus('error');
+                    return { isOk: true }; // Still return success since we deleted locally
+                }
+            }
+
+            // Fallback localStorage methods
+            loadFromLocalStorage() {
+                try {
+                    const data = localStorage.getItem('quiz-builder-data');
+                    return data ? JSON.parse(data) : [];
+                } catch (error) {
+                    console.error('Failed to load from localStorage:', error);
+                    return [];
+                }
+            }
+
+            saveToLocalStorage(quiz) {
+                try {
+                    const quizzes = this.loadFromLocalStorage();
+                    const existingIndex = quizzes.findIndex(q => q.id === quiz.id);
+                    
+                    if (existingIndex >= 0) {
+                        quizzes[existingIndex] = quiz;
+                    } else {
+                        quizzes.push(quiz);
+                    }
+                    
+                    localStorage.setItem('quiz-builder-data', JSON.stringify(quizzes));
+                    return { isOk: true };
+                } catch (error) {
+                    console.error('Failed to save to localStorage:', error);
+                    return { isOk: false, error };
+                }
+            }
+
+            deleteFromLocalStorage(quizId) {
+                try {
+                    const quizzes = this.loadFromLocalStorage();
+                    const filtered = quizzes.filter(q => q.id !== quizId);
+                    localStorage.setItem('quiz-builder-data', JSON.stringify(filtered));
+                    return { isOk: true };
+                } catch (error) {
+                    console.error('Failed to delete from localStorage:', error);
+                    return { isOk: false, error };
+                }
+            }
+        }
+
+        // Initialize Google Sheets API
+        googleSheetsAPI = new GoogleSheetsAPI();
+
+        // Data handler
+        const dataHandler = {
+            onDataChanged(data) {
+                quizzes = data || [];
+                updateDashboard();
+                updateStats();
+            }
+        };
+
+        // Configuration functions
+        function showConfigModal() {
+            document.getElementById('config-modal').classList.remove('hidden');
+            document.getElementById('api-key-input').value = GOOGLE_CONFIG.API_KEY;
+            document.getElementById('sheet-id-input').value = GOOGLE_CONFIG.SHEET_ID;
+        }
+
+        function hideConfigModal() {
+            document.getElementById('config-modal').classList.add('hidden');
+        }
+
+        function hideConfigBanner() {
+            document.getElementById('config-banner').style.display = 'none';
+            localStorage.setItem('hide-config-banner', 'true');
+        }
+
+        async function testConnection() {
+            const apiKey = document.getElementById('api-key-input').value.trim();
+            const sheetId = document.getElementById('sheet-id-input').value.trim();
+
+            if (!apiKey || !sheetId) {
+                showToast('Please enter both API Key and Sheet ID', 'error');
+                return;
+            }
+
+            // Temporarily update config for testing
+            const originalConfig = { ...GOOGLE_CONFIG };
+            GOOGLE_CONFIG.API_KEY = apiKey;
+            GOOGLE_CONFIG.SHEET_ID = sheetId;
+
+            const testAPI = new GoogleSheetsAPI();
+            const result = await testAPI.init();
+
+            if (result.isOk) {
+                try {
+                    await testAPI.loadQuizzes();
+                    showToast('Connection successful!', 'success');
+                } catch (error) {
+                    showToast('API works but failed to read sheet. Check sheet ID and permissions.', 'error');
+                    GOOGLE_CONFIG = originalConfig; // Restore original config
+                }
+            } else {
+                showToast('Connection failed. Check your API key and sheet ID.', 'error');
+                GOOGLE_CONFIG = originalConfig; // Restore original config
+            }
+        }
+
+        async function saveConfiguration() {
+            const apiKey = document.getElementById('api-key-input').value.trim();
+            const sheetId = document.getElementById('sheet-id-input').value.trim();
+
+            if (!apiKey || !sheetId) {
+                showToast('Please enter both API Key and Sheet ID', 'error');
+                return;
+            }
+
+            // Save to localStorage
+            localStorage.setItem('google-api-key', apiKey);
+            localStorage.setItem('google-sheet-id', sheetId);
+
+            // Update config
+            GOOGLE_CONFIG.API_KEY = apiKey;
+            GOOGLE_CONFIG.SHEET_ID = sheetId;
+
+            // Reinitialize API
+            googleSheetsAPI = new GoogleSheetsAPI();
+            await googleSheetsAPI.init();
+
+            hideConfigModal();
+            hideConfigBanner();
+            showToast('Configuration saved successfully!', 'success');
+
+            // Reload data
+            loadQuizzes();
+        }
+
+        function updateSyncStatus(status) {
+            const indicator = document.getElementById('sync-indicator');
+            const text = document.getElementById('sync-text');
+
+            switch (status) {
+                case 'connected':
+                    indicator.className = 'w-3 h-3 rounded-full bg-green-500';
+                    text.textContent = 'Google Sheets';
+                    break;
+                case 'synced':
+                    indicator.className = 'w-3 h-3 rounded-full bg-green-500';
+                    text.textContent = 'Synced';
+                    break;
+                case 'error':
+                    indicator.className = 'w-3 h-3 rounded-full bg-red-500';
+                    text.textContent = 'Sync Error';
+                    break;
+                default:
+                    indicator.className = 'w-3 h-3 rounded-full bg-gray-400';
+                    text.textContent = 'Local Storage';
+            }
+        }
+
+        async function syncWithGoogleSheets() {
+            if (!googleSheetsAPI.isInitialized) {
+                showToast('Google Sheets not configured. Click the gear icon to set up.', 'warning');
+                return;
+            }
+
+            showToast('Syncing with Google Sheets...', 'info');
+            const data = await googleSheetsAPI.loadQuizzes();
+            dataHandler.onDataChanged(data);
+            showToast('Sync completed!', 'success');
+        }
+
+        function exportQuizzes() {
+            const data = {
+                quizzes: quizzes,
+                exported_at: new Date().toISOString(),
+                version: "1.0"
+            };
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `quiz-builder-export-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            showToast('Quizzes exported successfully!', 'success');
+        }
+
+        // Initialize application
+        async function initApp() {
+            try {
+                // Check if config banner should be hidden
+                if (localStorage.getItem('hide-config-banner') === 'true' || 
+                    (GOOGLE_CONFIG.API_KEY && GOOGLE_CONFIG.SHEET_ID)) {
+                    document.getElementById('config-banner').style.display = 'none';
+                }
+
+                // Initialize Google Sheets API if configured
+                if (GOOGLE_CONFIG.API_KEY && GOOGLE_CONFIG.SHEET_ID) {
+                    await googleSheetsAPI.init();
+                }
+
+                setupEventListeners();
+                loadQuizzes();
+            } catch (error) {
+                console.error("Failed to initialize app:", error);
+                updateSyncStatus('error');
+            }
+        }
+
+        async function loadQuizzes() {
+            const data = await googleSheetsAPI.loadQuizzes();
+            dataHandler.onDataChanged(data);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Dashboard
+            document.getElementById('create-quiz-btn').addEventListener('click', startCreateProcess);
+            
+            // Step 1: Mode Selection
+            document.getElementById('back-to-dashboard').addEventListener('click', backToDashboard);
+            document.getElementById('continue-to-settings').addEventListener('click', goToSettings);
+            
+            // Step 2: Settings
+            document.getElementById('back-to-mode').addEventListener('click', backToModeSelection);
+            document.getElementById('back-to-mode-btn').addEventListener('click', backToModeSelection);
+            document.getElementById('continue-to-questions').addEventListener('click', goToQuestions);
+            
+            // Step 3: Questions
+            document.getElementById('back-to-settings').addEventListener('click', backToSettings);
+            document.getElementById('back-to-settings-btn').addEventListener('click', backToSettings);
+            document.getElementById('add-question-btn').addEventListener('click', addQuestion);
+            document.getElementById('clear-all-questions').addEventListener('click', clearAllQuestions);
+            document.getElementById('save-quiz').addEventListener('click', saveQuiz);
+            
+            // Import functionality
+            document.getElementById('import-file').addEventListener('change', handleFileImport);
+            document.getElementById('import-questions').addEventListener('click', importQuestions);
+            document.getElementById('show-import-format').addEventListener('click', showImportFormat);
+            document.getElementById('close-format-modal').addEventListener('click', hideImportFormat);
+            
+            // Close modal on backdrop click
+            document.getElementById('import-format-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'import-format-modal') {
+                    hideImportFormat();
+                }
+            });
+
+            // Config modal backdrop click
+            document.getElementById('config-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'config-modal') {
+                    hideConfigModal();
+                }
+            });
+        }
+
+        // Navigation functions
+        function startCreateProcess() {
+            hideAllScreens();
+            document.getElementById('step1-mode-selection').classList.remove('hidden');
+            resetCreateProcess();
+        }
+
+        function backToDashboard() {
+            hideAllScreens();
+            document.getElementById('dashboard').classList.remove('hidden');
+        }
+
+        function backToModeSelection() {
+            hideAllScreens();
+            document.getElementById('step1-mode-selection').classList.remove('hidden');
+        }
+
+        function goToSettings() {
+            if (!selectedMode) {
+                showToast('Please select a quiz mode first', 'error');
+                return;
+            }
+            hideAllScreens();
+            document.getElementById('step2-settings').classList.remove('hidden');
+            setupSettingsScreen();
+        }
+
+        function backToSettings() {
+            hideAllScreens();
+            document.getElementById('step2-settings').classList.remove('hidden');
+        }
+
+        function goToQuestions() {
+            const title = document.getElementById('quiz-title').value.trim();
+            if (!title) {
+                showToast('Please enter a quiz title', 'error');
+                return;
+            }
+            
+            // Save settings
+            quizSettings = {
+                title: title,
+                description: document.getElementById('quiz-description').value.trim(),
+                timeLimit: parseInt(document.getElementById('time-limit').value),
+                mode: selectedMode
+            };
+            
+            // Collect mode-specific settings
+            const modeSpecificInputs = document.querySelectorAll('#mode-specific-settings input, #mode-specific-settings select');
+            modeSpecificInputs.forEach(input => {
+                if (input.type === 'checkbox') {
+                    if (!quizSettings.modeSettings) quizSettings.modeSettings = {};
+                    if (!quizSettings.modeSettings[input.name]) quizSettings.modeSettings[input.name] = [];
+                    if (input.checked) {
+                        quizSettings.modeSettings[input.name].push(input.value);
+                    }
+                } else {
+                    if (!quizSettings.modeSettings) quizSettings.modeSettings = {};
+                    quizSettings.modeSettings[input.name] = input.value;
+                }
+            });
+            
+            hideAllScreens();
+            document.getElementById('step3-questions').classList.remove('hidden');
+            setupQuestionsScreen();
+        }
+
+        function hideAllScreens() {
+            document.getElementById('dashboard').classList.add('hidden');
+            document.getElementById('step1-mode-selection').classList.add('hidden');
+            document.getElementById('step2-settings').classList.add('hidden');
+            document.getElementById('step3-questions').classList.add('hidden');
+        }
+
+        function resetCreateProcess() {
+            selectedMode = null;
+            quizSettings = {};
+            questionCount = 0;
+            
+            // Reset mode selection
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.getElementById('continue-to-settings').disabled = true;
+            
+            // Reset forms
+            document.getElementById('quiz-title').value = '';
+            document.getElementById('quiz-description').value = '';
+            document.getElementById('time-limit').value = '30';
+            document.getElementById('questions-container').innerHTML = '';
+        }
+
+        // Mode selection
+        function selectMode(mode) {
+            selectedMode = mode;
+            
+            // Update UI
+            document.querySelectorAll('.mode-card').forEach(card => {
+                card.classList.remove('selected');
+            });
+            document.querySelector(`[data-mode="${mode}"]`).classList.add('selected');
+            
+            // Enable continue button
+            document.getElementById('continue-to-settings').disabled = false;
+        }
+
+        // Setup settings screen
+        function setupSettingsScreen() {
+            const config = modeConfigs[selectedMode];
+            
+            // Show selected mode
+            document.getElementById('mode-info').innerHTML = `
+                <div class="text-3xl">${config.icon}</div>
+                <div>
+                    <h4 class="font-semibold text-gray-900">${config.name}</h4>
+                    <p class="text-sm text-gray-600">${config.description}</p>
+                </div>
+            `;
+            
+            // Generate mode-specific settings
+            const settingsContainer = document.getElementById('mode-specific-settings');
+            settingsContainer.innerHTML = `
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">${config.name} Settings</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    ${Object.entries(config.settings).map(([key, setting]) => {
+                        if (setting.type === 'number') {
+                            return `
+                                <div>
+                                    <label for="${key}" class="block text-sm font-medium text-gray-700 mb-2">${setting.label}</label>
+                                    <input type="number" id="${key}" name="${key}" value="${setting.default}" min="${setting.min}" max="${setting.max}" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                </div>
+                            `;
+                        } else if (setting.type === 'checkbox') {
+                            return `
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-2">${setting.label}</label>
+                                    <div class="space-y-2">
+                                        ${setting.options.map(option => `
+                                            <label class="flex items-center">
+                                                <input type="checkbox" name="${key}" value="${option}" ${setting.default.includes(option) ? 'checked' : ''} class="mr-2">
+                                                <span class="text-sm text-gray-700">${option}</span>
+                                            </label>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                            `;
+                        }
+                        return '';
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // Setup questions screen
+        function setupQuestionsScreen() {
+            const config = modeConfigs[selectedMode];
+            
+            // Update format preview
+            updateFormatPreview();
+            
+            // Clear questions container
+            document.getElementById('questions-container').innerHTML = '';
+            questionCount = 0;
+            
+            // Add first question
+            addQuestion();
+        }
+
+        // Update format preview based on selected mode
+        function updateFormatPreview() {
+            const config = modeConfigs[selectedMode];
+            const formatExample = document.getElementById('format-example');
+            
+            let exampleText = '';
+            
+            switch (selectedMode) {
+                case 'jeopardy':
+                    exampleText = `JSON Format:
+{
+  "question": "What is the capital of Indonesia?",
+  "answers": ["Jakarta", "Surabaya", "Bandung", "Medan"],
+  "correctAnswer": 0,
+  "category": "Geography",
+  "points": 200
+}`;
+                    break;
+                    
+                case 'family':
+                    exampleText = `JSON Format:
+{
+  "question": "Name something you find in a kitchen",
+  "answers": [
+    {"text": "Refrigerator", "points": 38},
+    {"text": "Stove", "points": 31},
+    {"text": "Sink", "points": 22},
+    {"text": "Microwave", "points": 9}
+  ]
+}`;
+                    break;
+                    
+                case 'millionaire':
+                    exampleText = `JSON Format:
+{
+  "question": "Which planet is closest to the Sun?",
+  "answers": ["Venus", "Mercury", "Earth", "Mars"],
+  "correctAnswer": 1,
+  "difficulty": "easy"
+}`;
+                    break;
+                    
+                case 'grader':
+                    exampleText = `JSON Format:
+{
+  "question": "What is 2 + 2?",
+  "answers": ["3", "4", "5", "6"],
+  "correctAnswer": 1,
+  "grade": "1st Grade",
+  "subject": "Math"
+}`;
+                    break;
+            }
+            
+            formatExample.innerHTML = `<pre class="text-xs bg-gray-100 p-2 rounded overflow-x-auto">${exampleText}</pre>`;
+        }
+
+        // Add question based on mode
+        function addQuestion(questionData = null) {
+            questionCount++;
+            const container = document.getElementById('questions-container');
+            const config = modeConfigs[selectedMode];
+            
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question-item border border-gray-200 rounded-lg p-4 bg-gray-50';
+            
+            let questionHTML = `
+                <div class="flex items-center justify-between mb-3">
+                    <h4 class="font-medium text-gray-900">Question ${questionCount}</h4>
+                    <button type="button" class="text-red-500 hover:text-red-700 text-sm" onclick="removeQuestion(this)">Remove</button>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
+                    <input type="text" class="question-text w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Enter your question" value="${questionData ? questionData.question : ''}">
+                </div>
+            `;
+            
+            // Add mode-specific fields
+            if (selectedMode === 'jeopardy') {
+                questionHTML += `
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <input type="text" class="question-category w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Category" value="${questionData ? questionData.category || '' : ''}">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Points</label>
+                            <select class="question-points w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                <option value="100" ${questionData && questionData.points === 100 ? 'selected' : ''}>100</option>
+                                <option value="200" ${questionData && questionData.points === 200 ? 'selected' : ''}>200</option>
+                                <option value="300" ${questionData && questionData.points === 300 ? 'selected' : ''}>300</option>
+                                <option value="400" ${questionData && questionData.points === 400 ? 'selected' : ''}>400</option>
+                                <option value="500" ${questionData && questionData.points === 500 ? 'selected' : ''}>500</option>
+                            </select>
+                        </div>
+                    </div>
+                `;
+            } else if (selectedMode === 'grader') {
+                questionHTML += `
+                    <div class="grid grid-cols-2 gap-3 mb-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Grade Level</label>
+                            <select class="question-grade w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                                <option value="1st Grade" ${questionData && questionData.grade === '1st Grade' ? 'selected' : ''}>1st Grade</option>
+                                <option value="2nd Grade" ${questionData && questionData.grade === '2nd Grade' ? 'selected' : ''}>2nd Grade</option>
+                                <option value="3rd Grade" ${questionData && questionData.grade === '3rd Grade' ? 'selected' : ''}>3rd Grade</option>
+                                <option value="4th Grade" ${questionData && questionData.grade === '4th Grade' ? 'selected' : ''}>4th Grade</option>
+                                <option value="5th Grade" ${questionData && questionData.grade === '5th Grade' ? 'selected' : ''}>5th Grade</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                            <input type="text" class="question-subject w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Subject" value="${questionData ? questionData.subject || '' : ''}">
+                        </div>
+                    </div>
+                `;
+            } else if (selectedMode === 'millionaire') {
+                questionHTML += `
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
+                        <select class="question-difficulty w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent">
+                            <option value="easy" ${questionData && questionData.difficulty === 'easy' ? 'selected' : ''}>Easy (Questions 1-5)</option>
+                            <option value="medium" ${questionData && questionData.difficulty === 'medium' ? 'selected' : ''}>Medium (Questions 6-10)</option>
+                            <option value="hard" ${questionData && questionData.difficulty === 'hard' ? 'selected' : ''}>Hard (Questions 11-15)</option>
+                        </select>
+                    </div>
+                `;
+            }
+            
+            // Add answers section based on mode
+            if (selectedMode === 'family') {
+                questionHTML += `
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Survey Answers (with points)</label>
+                        <div class="space-y-2">
+                            ${[0, 1, 2, 3, 4, 5].map(i => `
+                                <div class="flex space-x-2">
+                                    <input type="text" class="answer-text flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Answer ${i + 1}" value="${questionData && questionData.answers && questionData.answers[i] ? questionData.answers[i].text : ''}">
+                                    <input type="number" class="answer-points w-20 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent" placeholder="Pts" min="1" max="50" value="${questionData && questionData.answers && questionData.answers[i] ? questionData.answers[i].points : ''}">
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Multiple choice format for other modes
+                questionHTML += `
+                    <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Answer Options</label>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            ${[0, 1, 2, 3].map(i => `
+                                <div class="answer-option border border-gray-200 rounded-lg p-2 cursor-pointer ${questionData && questionData.correctAnswer === i ? 'correct bg-green-100 border-green-500' : ''}" onclick="selectCorrectAnswer(this, ${i})">
+                                    <div class="flex items-center space-x-2">
+                                        <div class="w-4 h-4 border-2 border-gray-300 rounded-full ${questionData && questionData.correctAnswer === i ? 'bg-green-500 border-green-500' : ''}"></div>
+                                        <input type="text" class="answer-text flex-1 bg-transparent border-none outline-none text-sm" placeholder="Answer ${String.fromCharCode(65 + i)}" value="${questionData && questionData.answers && questionData.answers[i] ? questionData.answers[i] : ''}">
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Click on an answer to mark it as correct</p>
+                    </div>
+                `;
+            }
+            
+            questionDiv.innerHTML = questionHTML;
+            container.appendChild(questionDiv);
+        }
+
+        // Remove question
+        function removeQuestion(button) {
+            const questionDiv = button.closest('.question-item');
+            questionDiv.remove();
+            
+            // Renumber questions
+            const questions = document.querySelectorAll('.question-item h4');
+            questions.forEach((h4, index) => {
+                h4.textContent = `Question ${index + 1}`;
+            });
+            questionCount = questions.length;
+        }
+
+        // Select correct answer (for multiple choice modes)
+        function selectCorrectAnswer(element, answerIndex) {
+            const questionDiv = element.closest('.question-item');
+            const options = questionDiv.querySelectorAll('.answer-option');
+            
+            // Remove correct class from all options
+            options.forEach(option => {
+                option.classList.remove('correct', 'bg-green-100', 'border-green-500');
+                const radio = option.querySelector('.w-4');
+                radio.classList.remove('bg-green-500', 'border-green-500');
+                radio.classList.add('border-gray-300');
+            });
+            
+            // Add correct class to selected option
+            element.classList.add('correct', 'bg-green-100', 'border-green-500');
+            const radio = element.querySelector('.w-4');
+            radio.classList.add('bg-green-500', 'border-green-500');
+            radio.classList.remove('border-gray-300');
+        }
+
+        // Import functionality
+        function handleFileImport(event) {
+            const file = event.target.files[0];
+            if (file) {
+                document.getElementById('file-name').textContent = file.name;
+                
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    document.getElementById('import-text').value = content;
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        function importQuestions() {
+            const content = document.getElementById('import-text').value.trim();
+            if (!content) {
+                showToast('Please provide content to import', 'error');
+                return;
+            }
+            
+            try {
+                let questions = [];
+                
+                // Try to parse as JSON first
+                if (content.startsWith('[') || content.startsWith('{')) {
+                    questions = parseJSONQuestions(content);
+                } else {
+                    // Try simple text format based on mode
+                    questions = parseTextQuestions(content);
+                }
+                
+                if (questions.length === 0) {
+                    showToast('No valid questions found in the imported content', 'error');
+                    return;
+                }
+                
+                // Add imported questions
+                questions.forEach(questionData => {
+                    addQuestion(questionData);
+                });
+                
+                showToast(`Successfully imported ${questions.length} questions!`, 'success');
+                document.getElementById('import-text').value = '';
+                document.getElementById('file-name').textContent = 'No file selected';
+                
+            } catch (error) {
+                showToast('Failed to parse imported content. Please check the format.', 'error');
+            }
+        }
+
+        function parseJSONQuestions(content) {
+            const data = JSON.parse(content);
+            const questions = Array.isArray(data) ? data : [data];
+            
+            return questions.filter(q => {
+                if (!q.question) return false;
+                
+                if (selectedMode === 'family') {
+                    return q.answers && Array.isArray(q.answers) && q.answers.length > 0;
+                } else {
+                    return q.answers && Array.isArray(q.answers) && typeof q.correctAnswer === 'number';
+                }
+            });
+        }
+
+        function parseTextQuestions(content) {
+            // Simple text parsing - can be enhanced based on mode
+            const questions = [];
+            const blocks = content.split(/\n\s*\n/).filter(block => block.trim());
+            
+            for (const block of blocks) {
+                const lines = block.split('\n').map(line => line.trim()).filter(line => line);
+                
+                if (lines.length < 3) continue;
+                
+                const questionLine = lines.find(line => line.startsWith('Q:'));
+                if (!questionLine) continue;
+                
+                const question = questionLine.substring(2).trim();
+                const answerLines = lines.filter(line => /^[A-F]:|Answer \d+:/.test(line));
+                
+                if (selectedMode === 'family') {
+                    // Family Feud format: Answer: text (points)
+                    const answers = answerLines.map(line => {
+                        const match = line.match(/^(?:[A-F]:|Answer \d+:)\s*(.+?)\s*\((\d+)\)$/);
+                        if (match) {
+                            return { text: match[1], points: parseInt(match[2]) };
+                        }
+                        return null;
+                    }).filter(a => a);
+                    
+                    if (answers.length > 0) {
+                        questions.push({ question, answers });
+                    }
+                } else {
+                    // Multiple choice format
+                    const correctLine = lines.find(line => line.startsWith('Correct:'));
+                    if (!correctLine || answerLines.length < 2) continue;
+                    
+                    const answers = ['', '', '', ''];
+                    answerLines.forEach(line => {
+                        const match = line.match(/^([A-D]):\s*(.+)$/);
+                        if (match) {
+                            const index = match[1].charCodeAt(0) - 65;
+                            if (index >= 0 && index <= 3) {
+                                answers[index] = match[2];
+                            }
+                        }
+                    });
+                    
+                    const correctLetter = correctLine.split(':')[1].trim().toUpperCase();
+                    const correctIndex = correctLetter.charCodeAt(0) - 65;
+                    
+                    if (correctIndex >= 0 && correctIndex <= 3) {
+                        const questionObj = { question, answers, correctAnswer: correctIndex };
+                        
+                        // Add mode-specific fields if found
+                        if (selectedMode === 'jeopardy') {
+                            const categoryLine = lines.find(line => line.startsWith('Category:'));
+                            const pointsLine = lines.find(line => line.startsWith('Points:'));
+                            if (categoryLine) questionObj.category = categoryLine.split(':')[1].trim();
+                            if (pointsLine) questionObj.points = parseInt(pointsLine.split(':')[1].trim());
+                        } else if (selectedMode === 'grader') {
+                            const gradeLine = lines.find(line => line.startsWith('Grade:'));
+                            const subjectLine = lines.find(line => line.startsWith('Subject:'));
+                            if (gradeLine) questionObj.grade = gradeLine.split(':')[1].trim();
+                            if (subjectLine) questionObj.subject = subjectLine.split(':')[1].trim();
+                        } else if (selectedMode === 'millionaire') {
+                            const difficultyLine = lines.find(line => line.startsWith('Difficulty:'));
+                            if (difficultyLine) questionObj.difficulty = difficultyLine.split(':')[1].trim();
+                        }
+                        
+                        questions.push(questionObj);
+                    }
+                }
+            }
+            
+            return questions;
+        }
+
+        function showImportFormat() {
+            const config = modeConfigs[selectedMode];
+            const content = document.getElementById('format-examples-content');
+            
+            let examples = '';
+            
+            switch (selectedMode) {
+                case 'jeopardy':
+                    examples = `
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">JSON Format</h3>
+                                <pre class="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code>[
+  {
+    "question": "What is the capital of Indonesia?",
+    "answers": ["Jakarta", "Surabaya", "Bandung", "Medan"],
+    "correctAnswer": 0,
+    "category": "Geography",
+    "points": 200
+  }
+]</code></pre>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Text Format</h3>
+                                <pre class="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code>Q: What is the capital of Indonesia?
+Category: Geography
+Points: 200
+A: Jakarta
+B: Surabaya
+C: Bandung
+D: Medan
+Correct: A</code></pre>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'family':
+                    examples = `
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">JSON Format</h3>
+                                <pre class="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code>[
+  {
+    "question": "Name something you find in a kitchen",
+    "answers": [
+      {"text": "Refrigerator", "points": 38},
+      {"text": "Stove", "points": 31},
+      {"text": "Sink", "points": 22},
+      {"text": "Microwave", "points": 9}
+    ]
+  }
+]</code></pre>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Text Format</h3>
+                                <pre class="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code>Q: Name something you find in a kitchen
+A: Refrigerator (38)
+B: Stove (31)
+C: Sink (22)
+D: Microwave (9)</code></pre>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'millionaire':
+                    examples = `
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">JSON Format</h3>
+                                <pre class="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code>[
+  {
+    "question": "Which planet is closest to the Sun?",
+    "answers": ["Venus", "Mercury", "Earth", "Mars"],
+    "correctAnswer": 1,
+    "difficulty": "easy"
+  }
+]</code></pre>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Text Format</h3>
+                                <pre class="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code>Q: Which planet is closest to the Sun?
+Difficulty: easy
+A: Venus
+B: Mercury
+C: Earth
+D: Mars
+Correct: B</code></pre>
+                            </div>
+                        </div>
+                    `;
+                    break;
+                    
+                case 'grader':
+                    examples = `
+                        <div class="space-y-6">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">JSON Format</h3>
+                                <pre class="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code>[
+  {
+    "question": "What is 2 + 2?",
+    "answers": ["3", "4", "5", "6"],
+    "correctAnswer": 1,
+    "grade": "1st Grade",
+    "subject": "Math"
+  }
+]</code></pre>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 mb-3">Text Format</h3>
+                                <pre class="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto"><code>Q: What is 2 + 2?
+Grade: 1st Grade
+Subject: Math
+A: 3
+B: 4
+C: 5
+D: 6
+Correct: B</code></pre>
+                            </div>
+                        </div>
+                    `;
+                    break;
+            }
+            
+            content.innerHTML = examples;
+            document.getElementById('import-format-modal').classList.remove('hidden');
+        }
+
+        function hideImportFormat() {
+            document.getElementById('import-format-modal').classList.add('hidden');
+        }
+
+        function clearAllQuestions() {
+            const container = document.getElementById('questions-container');
+            if (container.children.length === 0) {
+                showToast('No questions to clear', 'info');
+                return;
+            }
+            
+            // Show inline confirmation
+            const confirmDiv = document.createElement('div');
+            confirmDiv.className = 'bg-red-50 border border-red-200 rounded-lg p-4 mb-4 text-center';
+            confirmDiv.innerHTML = `
+                <p class="text-red-800 mb-3">Are you sure you want to clear all questions?</p>
+                <div class="flex justify-center space-x-3">
+                    <button onclick="confirmClearAll()" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">Clear All</button>
+                    <button onclick="cancelClearAll()" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50">Cancel</button>
+                </div>
+            `;
+            
+            container.parentNode.insertBefore(confirmDiv, container);
+        }
+
+        function confirmClearAll() {
+            document.getElementById('questions-container').innerHTML = '';
+            questionCount = 0;
+            
+            // Remove confirmation div
+            const confirmDiv = document.querySelector('.bg-red-50');
+            if (confirmDiv) confirmDiv.remove();
+            
+            showToast('All questions cleared', 'success');
+        }
+
+        function cancelClearAll() {
+            const confirmDiv = document.querySelector('.bg-red-50');
+            if (confirmDiv) confirmDiv.remove();
+        }
+
+        // Save quiz
+        async function saveQuiz() {
+            const questionItems = document.querySelectorAll('.question-item');
+            if (questionItems.length === 0) {
+                showToast('Please add at least one question', 'error');
+                return;
+            }
+            
+            const questions = [];
+            let hasError = false;
+            
+            questionItems.forEach((item, index) => {
+                const questionText = item.querySelector('.question-text').value.trim();
+                
+                if (!questionText) {
+                    showToast(`Please enter text for question ${index + 1}`, 'error');
+                    hasError = true;
+                    return;
+                }
+                
+                const questionObj = { question: questionText };
+                
+                if (selectedMode === 'family') {
+                    // Family Feud format
+                    const answerTexts = item.querySelectorAll('.answer-text');
+                    const answerPoints = item.querySelectorAll('.answer-points');
+                    const answers = [];
+                    
+                    for (let i = 0; i < answerTexts.length; i++) {
+                        const text = answerTexts[i].value.trim();
+                        const points = parseInt(answerPoints[i].value);
+                        
+                        if (text && points) {
+                            answers.push({ text, points });
+                        }
+                    }
+                    
+                    if (answers.length < 2) {
+                        showToast(`Please provide at least 2 answers for question ${index + 1}`, 'error');
+                        hasError = true;
+                        return;
+                    }
+                    
+                    questionObj.answers = answers;
+                } else {
+                    // Multiple choice format
+                    const answerInputs = item.querySelectorAll('.answer-text');
+                    const correctOption = item.querySelector('.answer-option.correct');
+                    
+                    const answers = Array.from(answerInputs).map(input => input.value.trim());
+                    const filledAnswers = answers.filter(answer => answer !== '');
+                    
+                    if (filledAnswers.length < 2) {
+                        showToast(`Please provide at least 2 answers for question ${index + 1}`, 'error');
+                        hasError = true;
+                        return;
+                    }
+                    
+                    if (!correctOption) {
+                        showToast(`Please select the correct answer for question ${index + 1}`, 'error');
+                        hasError = true;
+                        return;
+                    }
+                    
+                    const correctAnswerIndex = Array.from(item.querySelectorAll('.answer-option')).indexOf(correctOption);
+                    
+                    questionObj.answers = answers;
+                    questionObj.correctAnswer = correctAnswerIndex;
+                }
+                
+                // Add mode-specific fields
+                if (selectedMode === 'jeopardy') {
+                    const category = item.querySelector('.question-category')?.value.trim();
+                    const points = parseInt(item.querySelector('.question-points')?.value);
+                    if (category) questionObj.category = category;
+                    if (points) questionObj.points = points;
+                } else if (selectedMode === 'grader') {
+                    const grade = item.querySelector('.question-grade')?.value;
+                    const subject = item.querySelector('.question-subject')?.value.trim();
+                    if (grade) questionObj.grade = grade;
+                    if (subject) questionObj.subject = subject;
+                } else if (selectedMode === 'millionaire') {
+                    const difficulty = item.querySelector('.question-difficulty')?.value;
+                    if (difficulty) questionObj.difficulty = difficulty;
+                }
+                
+                questions.push(questionObj);
+            });
+            
+            if (hasError) return;
+            
+            const quizData = {
+                id: editingQuizId || generateId(),
+                title: quizSettings.title,
+                description: quizSettings.description,
+                mode: selectedMode,
+                settings: JSON.stringify(quizSettings),
+                questions: JSON.stringify(questions),
+                created_at: new Date().toISOString(),
+                question_count: questions.length
+            };
+            
+            try {
+                const result = await googleSheetsAPI.saveQuiz(quizData);
+                
+                if (result && result.isOk) {
+                    showToast(editingQuizId ? 'Quiz updated successfully!' : 'Quiz created successfully!', 'success');
+                    backToDashboard();
+                    loadQuizzes(); // Reload to show updated data
+                } else {
+                    showToast('Failed to save quiz. Please try again.', 'error');
+                }
+            } catch (error) {
+                showToast('An error occurred while saving the quiz.', 'error');
+            }
+        }
+
+        // Update dashboard
+        function updateDashboard() {
+            const grid = document.getElementById('quiz-grid');
+            const emptyState = document.getElementById('empty-state');
+            
+            if (quizzes.length === 0) {
+                grid.innerHTML = '';
+                emptyState.classList.remove('hidden');
+            } else {
+                emptyState.classList.add('hidden');
+                grid.innerHTML = quizzes.map(quiz => {
+                    const config = modeConfigs[quiz.mode];
+                    return `
+                        <div class="quiz-card bg-white rounded-xl shadow-lg p-6 fade-in">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="text-2xl">${config.icon}</div>
+                                    <div>
+                                        <h3 class="text-xl font-semibold text-gray-900">${quiz.title}</h3>
+                                        <p class="text-sm text-${config.color}-600 font-medium">${config.name}</p>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button onclick="editQuiz('${quiz.id}')" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                                    <button onclick="deleteQuiz('${quiz.id}')" class="text-red-600 hover:text-red-800 text-sm">Delete</button>
+                                </div>
+                            </div>
+                            <p class="text-gray-600 mb-4">${quiz.description}</p>
+                            <div class="flex items-center justify-between text-sm text-gray-500 mb-4">
+                                <span>${quiz.question_count} questions</span>
+                                <span>Created ${new Date(quiz.created_at).toLocaleDateString()}</span>
+                            </div>
+                            <button onclick="playQuiz('${quiz.id}')" class="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-2 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200">
+                                Play Quiz Show
+                            </button>
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        // Update stats
+        function updateStats() {
+            document.getElementById('total-quizzes').textContent = quizzes.length;
+            
+            const totalQuestions = quizzes.reduce((sum, quiz) => sum + quiz.question_count, 0);
+            document.getElementById('total-questions').textContent = totalQuestions;
+        }
+
+        // Edit quiz
+        function editQuiz(quizId) {
+            const quiz = quizzes.find(q => q.id === quizId);
+            if (!quiz) return;
+            
+            editingQuizId = quizId;
+            selectedMode = quiz.mode;
+            
+            try {
+                quizSettings = JSON.parse(quiz.settings);
+            } catch {
+                quizSettings = { title: quiz.title, description: quiz.description };
+            }
+            
+            // Start edit process
+            hideAllScreens();
+            document.getElementById('step2-settings').classList.remove('hidden');
+            setupSettingsScreen();
+            
+            // Fill in the settings
+            document.getElementById('quiz-title').value = quiz.title;
+            document.getElementById('quiz-description').value = quiz.description;
+            
+            // Continue to questions
+            setTimeout(() => {
+                goToQuestions();
+                
+                // Load existing questions
+                try {
+                    const questions = JSON.parse(quiz.questions);
+                    document.getElementById('questions-container').innerHTML = '';
+                    questionCount = 0;
+                    
+                    questions.forEach(questionData => {
+                        addQuestion(questionData);
+                    });
+                } catch (error) {
+                    console.error('Failed to load questions:', error);
+                }
+            }, 100);
+        }
+
+        // Delete quiz
+        async function deleteQuiz(quizId) {
+            const quiz = quizzes.find(q => q.id === quizId);
+            if (!quiz) return;
+            
+            // Show inline confirmation
+            const quizCard = event.target.closest('.quiz-card');
+            const originalContent = quizCard.innerHTML;
+            
+            quizCard.innerHTML = `
+                <div class="text-center py-8">
+                    <p class="text-gray-900 mb-4">Delete "${quiz.title}"?</p>
+                    <div class="flex justify-center space-x-3">
+                        <button onclick="confirmDelete('${quizId}')" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700">Delete</button>
+                        <button onclick="cancelDelete(this, \`${originalContent.replace(/`/g, '\\`')}\`)" class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50">Cancel</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Confirm delete
+        async function confirmDelete(quizId) {
+            try {
+                const result = await googleSheetsAPI.deleteQuiz(quizId);
+                if (result && result.isOk) {
+                    showToast('Quiz deleted successfully!', 'success');
+                    loadQuizzes(); // Reload to show updated data
+                } else {
+                    showToast('Failed to delete quiz. Please try again.', 'error');
+                }
+            } catch (error) {
+                showToast('An error occurred while deleting the quiz.', 'error');
+            }
+        }
+
+        // Cancel delete
+        function cancelDelete(button, originalContent) {
+            const quizCard = button.closest('.quiz-card');
+            quizCard.innerHTML = originalContent;
+        }
+
+        // Play quiz (placeholder - would launch the appropriate game mode)
+        function playQuiz(quizId) {
+            const quiz = quizzes.find(q => q.id === quizId);
+            if (!quiz) return;
+            
+            showToast(`Playing ${quiz.title} in ${modeConfigs[quiz.mode].name} mode!`, 'info');
+            // Here you would launch the appropriate game mode with the quiz data
+        }
+
+        // Utility functions
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 ${
+                type === 'success' ? 'bg-green-600' : 
+                type === 'error' ? 'bg-red-600' : 
+                type === 'warning' ? 'bg-yellow-600' : 'bg-blue-600'
+            }`;
+            toast.textContent = message;
+            
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        // Initialize app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', initApp);
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'998c3c1e519aca4b',t:'MTc2MjE3NjcxNi4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
