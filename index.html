@@ -1142,30 +1142,13 @@ async saveQuiz(quiz) {
             }
         }
 
-        async function syncWithGoogleSheets() {
-            if (!GOOGLE_CONFIG.API_KEY || !GOOGLE_CONFIG.SHEET_ID) {
-                showToast('⚙️ Please setup Google Sheets configuration first', 'warning');
-                showConfigModal();
-                return;
-            }
-
-            showToast('🔄 Syncing with Google Sheets...', 'info');
-            updateSyncStatus('connecting');
-            
-            // If not initialized, try to initialize first
-            if (!googleSheetsAPI.isInitialized) {
-                const initResult = await googleSheetsAPI.init();
-                if (!initResult.isOk) {
-                    showToast('❌ Sync failed: Google Sheets API initialization error', 'error');
-                    updateSyncStatus('error');
-                    return;
-                }
-            }
-            
-            const data = await googleSheetsAPI.loadQuizzes();
-            dataHandler.onDataChanged(data);
-            showToast('✅ Sync completed successfully!', 'success');
-        }
+async function syncWithGoogleSheets() {
+  showToast('🔄 Syncing with Google Sheet...', 'info');
+  updateSyncStatus('connecting');
+  const data = await googleSheetsAPI.loadQuizzes();
+  dataHandler.onDataChanged(data);
+  showToast('✅ Sync completed!', 'success');
+}
 
         function exportQuizzes() {
             const data = {
