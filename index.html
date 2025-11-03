@@ -428,6 +428,73 @@
       </div>
      </div>
     </div>
+   </div><!-- Game Rules Modal -->
+   <div id="game-rules-modal" class="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm hidden z-50">
+    <div class="flex items-center justify-center min-h-full p-4">
+     <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden slide-in">
+      <div class="flex items-center justify-between p-6 border-b">
+       <div class="flex items-center space-x-3">
+        <div id="rules-mode-icon" class="text-3xl">
+         🎯
+        </div>
+        <div>
+         <h2 id="rules-title" class="text-2xl font-bold text-gray-900">Game Rules</h2>
+         <p id="rules-subtitle" class="text-gray-600">How to play this quiz show</p>
+        </div>
+       </div><button id="close-rules-modal" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
+      </div>
+      <div class="p-6 overflow-y-auto" style="max-height: calc(90vh - 180px);">
+       <div id="game-rules-content"><!-- Game rules will be inserted based on quiz mode -->
+       </div>
+      </div>
+      <div class="flex items-center justify-between p-6 border-t bg-gray-50">
+       <div class="flex items-center space-x-4 text-sm text-gray-600">
+        <div class="flex items-center space-x-2"><span class="text-lg">❓</span> <span id="rules-question-count">0 questions</span>
+        </div>
+        <div class="flex items-center space-x-2"><span class="text-lg">⏱️</span> <span id="rules-time-limit">30 seconds per question</span>
+        </div>
+       </div>
+       <div class="flex space-x-3"><button id="cancel-play" class="border border-gray-300 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-50 transition-colors"> Cancel </button> <button id="start-game" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg font-medium hover:from-purple-700 hover:to-blue-700 transition-all duration-200"> 🎮 Start Game </button>
+       </div>
+      </div>
+     </div>
+    </div>
+   </div><!-- Game Screen -->
+   <div id="game-screen" class="hidden screen-container overflow-y-auto bg-gradient-to-br from-purple-900 to-blue-900">
+    <div class="min-h-full flex flex-col"><!-- Game Header -->
+     <header class="bg-black bg-opacity-30 backdrop-blur-sm border-b border-white border-opacity-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+       <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+         <div id="game-mode-icon" class="text-3xl">
+          🎯
+         </div>
+         <div>
+          <h1 id="game-title" class="text-2xl font-bold text-white">Quiz Title</h1>
+          <p id="game-mode-name" class="text-purple-200">Game Mode</p>
+         </div>
+        </div>
+        <div class="flex items-center space-x-6">
+         <div id="game-timer" class="bg-red-600 text-white px-4 py-2 rounded-lg font-bold text-lg hidden"><span id="timer-display">30</span>
+         </div>
+         <div id="game-score" class="bg-green-600 text-white px-4 py-2 rounded-lg font-bold">
+          Score: <span id="score-display">0</span>
+         </div><button id="quit-game" class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"> Quit Game </button>
+        </div>
+       </div>
+      </div>
+     </header><!-- Game Content -->
+     <main id="game-content" class="flex-1 flex items-center justify-center p-8"><!-- Game content will be inserted here based on mode -->
+     </main><!-- Game Footer -->
+     <footer class="bg-black bg-opacity-30 backdrop-blur-sm border-t border-white border-opacity-20 p-4">
+      <div class="max-w-7xl mx-auto flex items-center justify-between">
+       <div class="flex items-center space-x-4 text-white"><span>Question <span id="current-question">1</span> of <span id="total-questions">10</span></span>
+       </div>
+       <div id="game-controls" class="flex space-x-3"><!-- Game controls will be inserted here -->
+       </div>
+      </div>
+     </footer>
+    </div>
    </div>
   </div>
   <script>
@@ -468,6 +535,48 @@
                 settings: {
                     categories: { type: "number", label: "Number of Categories", default: 5, min: 3, max: 6 },
                     teams: { type: "number", label: "Number of Teams", default: 3, min: 2, max: 4 }
+                },
+                rules: {
+                    title: "Jeopardy Rules",
+                    subtitle: "Classic quiz show format with categories and point values",
+                    overview: "Jeopardy is a quiz show where contestants select questions from different categories with varying point values. The team with the most points at the end wins!",
+                    gameplay: [
+                        {
+                            title: "🎯 Game Setup",
+                            points: [
+                                "Questions are organized into categories with point values (100, 200, 300, 400, 500)",
+                                "Teams take turns selecting questions from the board",
+                                "Higher point values indicate more difficult questions"
+                            ]
+                        },
+                        {
+                            title: "🎮 How to Play",
+                            points: [
+                                "Team selects a category and point value (e.g., 'Geography for 300')",
+                                "Question is revealed and timer starts",
+                                "Team has limited time to discuss and answer",
+                                "Correct answers earn the point value, wrong answers lose points"
+                            ]
+                        },
+                        {
+                            title: "🏆 Scoring",
+                            points: [
+                                "Correct answer: +Points (100-500 based on difficulty)",
+                                "Wrong answer: -Points (same amount)",
+                                "No answer: 0 points",
+                                "Team with highest total score wins"
+                            ]
+                        },
+                        {
+                            title: "⚡ Special Rules",
+                            points: [
+                                "Teams alternate turns selecting questions",
+                                "If a team answers correctly, they get to pick the next question",
+                                "If wrong, the next team gets to choose",
+                                "All questions must be answered to complete the game"
+                            ]
+                        }
+                    ]
                 }
             },
             family: {
@@ -479,6 +588,49 @@
                 settings: {
                     families: { type: "number", label: "Number of Families", default: 2, min: 2, max: 2 },
                     strikes: { type: "number", label: "Strikes per Round", default: 3, min: 2, max: 5 }
+                },
+                rules: {
+                    title: "Family Feud Rules",
+                    subtitle: "Survey says... the most popular answers win!",
+                    overview: "Family Feud is based on surveys of 100 people. Teams try to guess the most popular answers to survey questions. The more popular the answer, the more points you earn!",
+                    gameplay: [
+                        {
+                            title: "📊 Survey Questions",
+                            points: [
+                                "Each question was 'asked to 100 people'",
+                                "Answers are ranked by popularity (most to least common)",
+                                "Points are awarded based on how many people gave that answer",
+                                "Top answers are worth more points"
+                            ]
+                        },
+                        {
+                            title: "🎮 How to Play",
+                            points: [
+                                "Teams alternate guessing answers to the survey question",
+                                "If the answer is on the board, it's revealed with its point value",
+                                "Teams continue guessing until they find all answers or get strikes",
+                                "Wrong answers result in strikes (❌)"
+                            ]
+                        },
+                        {
+                            title: "⚠️ Strike System",
+                            points: [
+                                "Wrong answers give your team a strike",
+                                "Get 3 strikes and the other team can steal",
+                                "Stealing team needs just one correct answer to win all points",
+                                "If they fail to steal, original team keeps their points"
+                            ]
+                        },
+                        {
+                            title: "🏆 Scoring",
+                            points: [
+                                "Points = Number of people who gave that answer",
+                                "Find all answers: Your team gets all points for that question",
+                                "Get 3 strikes: Other team can attempt to steal all points",
+                                "Team with most total points wins"
+                            ]
+                        }
+                    ]
                 }
             },
             millionaire: {
@@ -489,6 +641,49 @@
                 questionFormat: "multiple_choice",
                 settings: {
                     lifelines: { type: "checkbox", label: "Available Lifelines", options: ["50:50", "Phone a Friend", "Ask Audience"], default: ["50:50", "Phone a Friend", "Ask Audience"] }
+                },
+                rules: {
+                    title: "Who Wants to be a Millionaire Rules",
+                    subtitle: "Answer 15 questions to become a millionaire!",
+                    overview: "Climb the money ladder by answering increasingly difficult multiple-choice questions. Use your lifelines wisely - you'll need them for the harder questions!",
+                    gameplay: [
+                        {
+                            title: "💰 Money Ladder",
+                            points: [
+                                "15 questions with increasing prize values",
+                                "Questions 1-5: Easy ($100 - $1,000)",
+                                "Questions 6-10: Medium ($2,000 - $32,000)", 
+                                "Questions 11-15: Hard ($64,000 - $1,000,000)"
+                            ]
+                        },
+                        {
+                            title: "🎮 How to Play",
+                            points: [
+                                "Read each question carefully - you only get one chance",
+                                "Choose from 4 multiple choice answers (A, B, C, D)",
+                                "Correct answer moves you up the money ladder",
+                                "Wrong answer ends the game (but you keep safe haven money)"
+                            ]
+                        },
+                        {
+                            title: "🆘 Lifelines",
+                            points: [
+                                "50:50 - Removes 2 wrong answers, leaving the correct one and 1 wrong",
+                                "Phone a Friend - Get help from a virtual friend",
+                                "Ask the Audience - See what the audience thinks is correct",
+                                "Each lifeline can only be used once per game"
+                            ]
+                        },
+                        {
+                            title: "🏦 Safe Havens",
+                            points: [
+                                "Question 5 ($1,000) and Question 10 ($32,000) are safe havens",
+                                "If you answer wrong after a safe haven, you keep that amount",
+                                "You can walk away at any time with your current winnings",
+                                "Risk vs. reward - go for more or play it safe?"
+                            ]
+                        }
+                    ]
                 }
             },
             grader: {
@@ -499,6 +694,49 @@
                 questionFormat: "multiple_choice_graded",
                 settings: {
                     grades: { type: "checkbox", label: "Grade Levels", options: ["1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"], default: ["1st Grade", "2nd Grade", "3rd Grade", "4th Grade", "5th Grade"] }
+                },
+                rules: {
+                    title: "Are You Smarter than a 5th Grader? Rules",
+                    subtitle: "Elementary school questions that might stump adults!",
+                    overview: "Answer questions from elementary school subjects across different grade levels. Don't worry - you have virtual 5th grade students to help you out when things get tricky!",
+                    gameplay: [
+                        {
+                            title: "📚 Grade Levels",
+                            points: [
+                                "Questions span from 1st Grade to 5th Grade",
+                                "Subjects include Math, Science, Social Studies, English, and more",
+                                "Higher grades = more difficult questions",
+                                "Each question shows the grade level and subject"
+                            ]
+                        },
+                        {
+                            title: "🎮 How to Play",
+                            points: [
+                                "Select a grade level and subject category",
+                                "Read the question and choose from 4 multiple choice answers",
+                                "Answer correctly to earn money and continue",
+                                "Wrong answer ends the game (unless you use helps)"
+                            ]
+                        },
+                        {
+                            title: "👨‍🎓 Student Helps",
+                            points: [
+                                "Peek - See what answer a 5th grader chose (but they might be wrong!)",
+                                "Copy - Use a 5th grader's answer as your final answer",
+                                "Save - If you're wrong, a 5th grader can save you (if they're right)",
+                                "Each help can only be used once per game"
+                            ]
+                        },
+                        {
+                            title: "🏆 Winning",
+                            points: [
+                                "Answer all questions correctly to win the grand prize",
+                                "You can drop out at any time and keep your winnings",
+                                "If you get a question wrong and can't be saved, you leave with $0",
+                                "The final question: 'Are you smarter than a 5th grader?'"
+                            ]
+                        }
+                    ]
                 }
             }
         };
@@ -1039,6 +1277,19 @@
                     hideConfigModal();
                 }
             });
+
+            // Game rules modal
+            document.getElementById('close-rules-modal').addEventListener('click', hideGameRules);
+            document.getElementById('cancel-play').addEventListener('click', hideGameRules);
+            document.getElementById('start-game').addEventListener('click', startActualGame);
+            document.getElementById('game-rules-modal').addEventListener('click', (e) => {
+                if (e.target.id === 'game-rules-modal') {
+                    hideGameRules();
+                }
+            });
+
+            // Game screen
+            document.getElementById('quit-game').addEventListener('click', quitGame);
         }
 
         // Navigation functions
@@ -1113,6 +1364,7 @@
             document.getElementById('step1-mode-selection').classList.add('hidden');
             document.getElementById('step2-settings').classList.add('hidden');
             document.getElementById('step3-questions').classList.add('hidden');
+            document.getElementById('game-screen').classList.add('hidden');
         }
 
         function resetCreateProcess() {
@@ -2010,13 +2262,689 @@ Correct: B</code></pre>
             quizCard.innerHTML = originalContent;
         }
 
-        // Play quiz (placeholder - would launch the appropriate game mode)
+        // Play quiz - show game rules first
         function playQuiz(quizId) {
             const quiz = quizzes.find(q => q.id === quizId);
             if (!quiz) return;
             
-            showToast(`🎮 Playing ${quiz.title} in ${modeConfigs[quiz.mode].name} mode!`, 'info');
-            // Here you would launch the appropriate game mode with the quiz data
+            showGameRules(quiz);
+        }
+
+        // Show game rules modal
+        function showGameRules(quiz) {
+            const config = modeConfigs[quiz.mode];
+            const rules = config.rules;
+            
+            // Update modal header
+            document.getElementById('rules-mode-icon').textContent = config.icon;
+            document.getElementById('rules-title').textContent = rules.title;
+            document.getElementById('rules-subtitle').textContent = rules.subtitle;
+            
+            // Update quiz info
+            document.getElementById('rules-question-count').textContent = `${quiz.question_count} questions`;
+            
+            // Get time limit from settings
+            let timeLimit = 30; // default
+            try {
+                const settings = JSON.parse(quiz.settings);
+                timeLimit = settings.timeLimit || 30;
+            } catch (e) {
+                // Use default if parsing fails
+            }
+            document.getElementById('rules-time-limit').textContent = `${timeLimit} seconds per question`;
+            
+            // Generate rules content
+            const rulesContent = document.getElementById('game-rules-content');
+            rulesContent.innerHTML = `
+                <div class="space-y-6">
+                    <!-- Overview -->
+                    <div class="bg-gradient-to-r from-${config.color}-50 to-${config.color}-100 rounded-lg p-6 border border-${config.color}-200">
+                        <h3 class="text-lg font-semibold text-${config.color}-800 mb-3 flex items-center">
+                            <span class="text-2xl mr-3">${config.icon}</span>
+                            Game Overview
+                        </h3>
+                        <p class="text-${config.color}-700 leading-relaxed">${rules.overview}</p>
+                    </div>
+                    
+                    <!-- Gameplay Rules -->
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        ${rules.gameplay.map(section => `
+                            <div class="bg-white border border-gray-200 rounded-lg p-5">
+                                <h4 class="font-semibold text-gray-900 mb-3 text-base">${section.title}</h4>
+                                <ul class="space-y-2">
+                                    ${section.points.map(point => `
+                                        <li class="flex items-start space-x-2 text-sm text-gray-700">
+                                            <span class="text-${config.color}-500 mt-1 flex-shrink-0">•</span>
+                                            <span>${point}</span>
+                                        </li>
+                                    `).join('')}
+                                </ul>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <!-- Quick Tips -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                        <h4 class="font-semibold text-yellow-800 mb-2 flex items-center">
+                            <span class="text-lg mr-2">💡</span>
+                            Quick Tips for Success
+                        </h4>
+                        <div class="text-sm text-yellow-700 space-y-1">
+                            ${getQuickTips(quiz.mode).map(tip => `
+                                <div class="flex items-start space-x-2">
+                                    <span class="text-yellow-500 mt-0.5">•</span>
+                                    <span>${tip}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Store current quiz for starting the game
+            window.currentGameQuiz = quiz;
+            
+            // Show modal
+            document.getElementById('game-rules-modal').classList.remove('hidden');
+        }
+
+        // Hide game rules modal
+        function hideGameRules() {
+            document.getElementById('game-rules-modal').classList.add('hidden');
+            window.currentGameQuiz = null;
+        }
+
+        // Start the actual game
+        function startActualGame() {
+            const quiz = window.currentGameQuiz;
+            if (!quiz) return;
+            
+            hideGameRules();
+            
+            // Parse quiz data
+            let questions = [];
+            let settings = {};
+            
+            try {
+                questions = JSON.parse(quiz.questions);
+                settings = JSON.parse(quiz.settings);
+            } catch (error) {
+                showToast('❌ Error loading quiz data', 'error');
+                return;
+            }
+            
+            if (questions.length === 0) {
+                showToast('❌ No questions found in this quiz', 'error');
+                return;
+            }
+            
+            // Initialize game based on mode
+            switch (quiz.mode) {
+                case 'jeopardy':
+                    startJeopardyGame(quiz, questions, settings);
+                    break;
+                case 'family':
+                    startFamilyFeudGame(quiz, questions, settings);
+                    break;
+                case 'millionaire':
+                    startMillionaireGame(quiz, questions, settings);
+                    break;
+                case 'grader':
+                    startGraderGame(quiz, questions, settings);
+                    break;
+                default:
+                    showToast('❌ Unknown game mode', 'error');
+            }
+        }
+
+        // Get quick tips based on game mode
+        function getQuickTips(mode) {
+            const tips = {
+                jeopardy: [
+                    "Start with lower point values to build confidence",
+                    "Remember that wrong answers lose you points",
+                    "Work as a team - discuss before answering",
+                    "Pay attention to categories you're strong in"
+                ],
+                family: [
+                    "Think like the average person, not the smartest answer",
+                    "Popular answers are often simple and obvious",
+                    "Don't overthink - go with your first instinct",
+                    "Remember: 3 strikes and the other team can steal!"
+                ],
+                millionaire: [
+                    "Use lifelines strategically - save them for harder questions",
+                    "Don't be afraid to walk away with your winnings",
+                    "Read all answer choices carefully before deciding",
+                    "Remember the safe havens at $1,000 and $32,000"
+                ],
+                grader: [
+                    "Don't underestimate elementary school questions!",
+                    "Use student helps when you're unsure",
+                    "Remember basic facts from each subject area",
+                    "Sometimes the simplest answer is correct"
+                ]
+            };
+            
+            return tips[mode] || [];
+        }
+
+        // Game Engine Variables
+        let currentGame = {
+            quiz: null,
+            questions: [],
+            settings: {},
+            currentQuestionIndex: 0,
+            score: 0,
+            timer: null,
+            timeLeft: 30,
+            gameState: 'waiting' // waiting, playing, paused, finished
+        };
+
+        // Initialize game screen
+        function initGameScreen(quiz, questions, settings) {
+            const config = modeConfigs[quiz.mode];
+            
+            // Update header
+            document.getElementById('game-mode-icon').textContent = config.icon;
+            document.getElementById('game-title').textContent = quiz.title;
+            document.getElementById('game-mode-name').textContent = config.name;
+            
+            // Update footer
+            document.getElementById('current-question').textContent = '1';
+            document.getElementById('total-questions').textContent = questions.length;
+            
+            // Reset score
+            document.getElementById('score-display').textContent = '0';
+            
+            // Set up game state
+            currentGame = {
+                quiz: quiz,
+                questions: questions,
+                settings: settings,
+                currentQuestionIndex: 0,
+                score: 0,
+                timer: null,
+                timeLeft: settings.timeLimit || 30,
+                gameState: 'playing'
+            };
+            
+            // Show game screen
+            hideAllScreens();
+            document.getElementById('game-screen').classList.remove('hidden');
+        }
+
+        // Start Jeopardy Game
+        function startJeopardyGame(quiz, questions, settings) {
+            initGameScreen(quiz, questions, settings);
+            showJeopardyQuestion();
+        }
+
+        // Start Family Feud Game
+        function startFamilyFeudGame(quiz, questions, settings) {
+            initGameScreen(quiz, questions, settings);
+            showFamilyFeudQuestion();
+        }
+
+        // Start Millionaire Game
+        function startMillionaireGame(quiz, questions, settings) {
+            initGameScreen(quiz, questions, settings);
+            showMillionaireQuestion();
+        }
+
+        // Start 5th Grader Game
+        function startGraderGame(quiz, questions, settings) {
+            initGameScreen(quiz, questions, settings);
+            showGraderQuestion();
+        }
+
+        // Show Jeopardy Question
+        function showJeopardyQuestion() {
+            const question = currentGame.questions[currentGame.currentQuestionIndex];
+            const content = document.getElementById('game-content');
+            
+            content.innerHTML = `
+                <div class="w-full max-w-4xl mx-auto">
+                    <div class="bg-blue-900 border-4 border-yellow-400 rounded-lg p-8 text-center mb-8">
+                        <div class="text-yellow-400 text-lg font-bold mb-2">${question.category || 'General Knowledge'}</div>
+                        <div class="text-yellow-400 text-2xl font-bold mb-4">$${question.points || 200}</div>
+                        <div class="text-white text-2xl font-bold">${question.question}</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        ${question.answers.map((answer, index) => `
+                            <button onclick="selectJeopardyAnswer(${index})" class="bg-blue-800 hover:bg-blue-700 text-white p-6 rounded-lg text-xl font-semibold border-2 border-blue-600 hover:border-yellow-400 transition-all duration-200">
+                                ${String.fromCharCode(65 + index)}. ${answer}
+                            </button>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+            
+            startTimer();
+        }
+
+        // Show Family Feud Question
+        function showFamilyFeudQuestion() {
+            const question = currentGame.questions[currentGame.currentQuestionIndex];
+            const content = document.getElementById('game-content');
+            
+            content.innerHTML = `
+                <div class="w-full max-w-4xl mx-auto">
+                    <div class="bg-red-900 border-4 border-yellow-400 rounded-lg p-8 text-center mb-8">
+                        <div class="text-yellow-400 text-3xl font-bold mb-4">SURVEY SAYS...</div>
+                        <div class="text-white text-2xl font-bold">${question.question}</div>
+                    </div>
+                    
+                    <div class="bg-blue-900 rounded-lg p-6 mb-6">
+                        <div class="grid grid-cols-1 gap-2">
+                            ${question.answers.map((answer, index) => `
+                                <div id="answer-${index}" class="bg-blue-800 border-2 border-blue-600 rounded-lg p-4 flex justify-between items-center text-white font-bold text-lg hidden">
+                                    <span>${index + 1}. ${answer.text}</span>
+                                    <span class="bg-yellow-600 px-3 py-1 rounded">${answer.points}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    
+                    <div class="text-center">
+                        <input type="text" id="family-answer-input" class="w-full max-w-md px-4 py-3 text-xl text-center border-4 border-yellow-400 rounded-lg bg-white font-bold" placeholder="Type your answer..." onkeypress="handleFamilyFeudEnter(event)">
+                        <button onclick="submitFamilyFeudAnswer()" class="mt-4 bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg text-xl font-bold">
+                            SUBMIT ANSWER
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.getElementById('family-answer-input').focus();
+            startTimer();
+        }
+
+        // Show Millionaire Question
+        function showMillionaireQuestion() {
+            const question = currentGame.questions[currentGame.currentQuestionIndex];
+            const content = document.getElementById('game-content');
+            const questionNumber = currentGame.currentQuestionIndex + 1;
+            const moneyValues = [100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 1000000];
+            const currentValue = moneyValues[Math.min(currentGame.currentQuestionIndex, moneyValues.length - 1)];
+            
+            content.innerHTML = `
+                <div class="w-full max-w-4xl mx-auto">
+                    <div class="bg-purple-900 border-4 border-yellow-400 rounded-lg p-8 text-center mb-8">
+                        <div class="text-yellow-400 text-lg font-bold mb-2">Question ${questionNumber} - $${currentValue.toLocaleString()}</div>
+                        <div class="text-white text-2xl font-bold">${question.question}</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        ${question.answers.map((answer, index) => `
+                            <button onclick="selectMillionaireAnswer(${index})" class="bg-purple-800 hover:bg-purple-700 text-white p-6 rounded-lg text-xl font-semibold border-2 border-purple-600 hover:border-yellow-400 transition-all duration-200">
+                                ${String.fromCharCode(65 + index)}: ${answer}
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button onclick="useLifeline('5050')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold">
+                            50:50
+                        </button>
+                        <button onclick="useLifeline('phone')" class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-bold">
+                            📞 Phone a Friend
+                        </button>
+                        <button onclick="useLifeline('audience')" class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-3 rounded-lg font-bold">
+                            👥 Ask Audience
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            startTimer();
+        }
+
+        // Show 5th Grader Question
+        function showGraderQuestion() {
+            const question = currentGame.questions[currentGame.currentQuestionIndex];
+            const content = document.getElementById('game-content');
+            
+            content.innerHTML = `
+                <div class="w-full max-w-4xl mx-auto">
+                    <div class="bg-green-900 border-4 border-yellow-400 rounded-lg p-8 text-center mb-8">
+                        <div class="text-yellow-400 text-lg font-bold mb-2">${question.grade || '5th Grade'} - ${question.subject || 'General'}</div>
+                        <div class="text-white text-2xl font-bold">${question.question}</div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4 mb-6">
+                        ${question.answers.map((answer, index) => `
+                            <button onclick="selectGraderAnswer(${index})" class="bg-green-800 hover:bg-green-700 text-white p-6 rounded-lg text-xl font-semibold border-2 border-green-600 hover:border-yellow-400 transition-all duration-200">
+                                ${String.fromCharCode(65 + index)}. ${answer}
+                            </button>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="flex justify-center space-x-4">
+                        <button onclick="useStudentHelp('peek')" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-bold">
+                            👀 Peek
+                        </button>
+                        <button onclick="useStudentHelp('copy')" class="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-lg font-bold">
+                            📝 Copy
+                        </button>
+                        <button onclick="useStudentHelp('save')" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-bold">
+                            🛡️ Save
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            startTimer();
+        }
+
+        // Timer functions
+        function startTimer() {
+            const timerDisplay = document.getElementById('game-timer');
+            const timerElement = document.getElementById('timer-display');
+            
+            timerDisplay.classList.remove('hidden');
+            currentGame.timeLeft = currentGame.settings.timeLimit || 30;
+            timerElement.textContent = currentGame.timeLeft;
+            
+            currentGame.timer = setInterval(() => {
+                currentGame.timeLeft--;
+                timerElement.textContent = currentGame.timeLeft;
+                
+                if (currentGame.timeLeft <= 10) {
+                    timerDisplay.classList.add('animate-pulse');
+                }
+                
+                if (currentGame.timeLeft <= 0) {
+                    clearInterval(currentGame.timer);
+                    handleTimeUp();
+                }
+            }, 1000);
+        }
+
+        function stopTimer() {
+            if (currentGame.timer) {
+                clearInterval(currentGame.timer);
+                currentGame.timer = null;
+            }
+            document.getElementById('game-timer').classList.add('hidden');
+        }
+
+        function handleTimeUp() {
+            showToast('⏰ Time\'s up!', 'warning');
+            nextQuestion();
+        }
+
+        // Answer handling functions
+        function selectJeopardyAnswer(answerIndex) {
+            stopTimer();
+            const question = currentGame.questions[currentGame.currentQuestionIndex];
+            const isCorrect = answerIndex === question.correctAnswer;
+            const points = question.points || 200;
+            
+            if (isCorrect) {
+                currentGame.score += points;
+                showToast(`✅ Correct! +$${points}`, 'success');
+            } else {
+                currentGame.score -= points;
+                showToast(`❌ Wrong! -$${points}. Correct answer: ${question.answers[question.correctAnswer]}`, 'error');
+            }
+            
+            updateScore();
+            setTimeout(nextQuestion, 2000);
+        }
+
+        function submitFamilyFeudAnswer() {
+            const input = document.getElementById('family-answer-input');
+            const userAnswer = input.value.trim().toLowerCase();
+            
+            if (!userAnswer) {
+                showToast('Please enter an answer', 'warning');
+                return;
+            }
+            
+            stopTimer();
+            const question = currentGame.questions[currentGame.currentQuestionIndex];
+            let foundAnswer = null;
+            
+            // Check if answer matches any of the survey answers
+            question.answers.forEach((answer, index) => {
+                if (answer.text.toLowerCase().includes(userAnswer) || userAnswer.includes(answer.text.toLowerCase())) {
+                    foundAnswer = { ...answer, index };
+                }
+            });
+            
+            if (foundAnswer) {
+                currentGame.score += foundAnswer.points;
+                document.getElementById(`answer-${foundAnswer.index}`).classList.remove('hidden');
+                showToast(`✅ Great answer! +${foundAnswer.points} points`, 'success');
+            } else {
+                showToast(`❌ Not on the board! Try: ${question.answers[0].text}`, 'error');
+            }
+            
+            updateScore();
+            setTimeout(nextQuestion, 3000);
+        }
+
+        function handleFamilyFeudEnter(event) {
+            if (event.key === 'Enter') {
+                submitFamilyFeudAnswer();
+            }
+        }
+
+        function selectMillionaireAnswer(answerIndex) {
+            stopTimer();
+            const question = currentGame.questions[currentGame.currentQuestionIndex];
+            const isCorrect = answerIndex === question.correctAnswer;
+            const moneyValues = [100, 200, 300, 500, 1000, 2000, 4000, 8000, 16000, 32000, 64000, 125000, 250000, 500000, 1000000];
+            const currentValue = moneyValues[Math.min(currentGame.currentQuestionIndex, moneyValues.length - 1)];
+            
+            if (isCorrect) {
+                currentGame.score = currentValue;
+                showToast(`✅ Correct! You've won $${currentValue.toLocaleString()}!`, 'success');
+            } else {
+                showToast(`❌ Wrong! Correct answer: ${question.answers[question.correctAnswer]}. Game Over!`, 'error');
+                endGame();
+                return;
+            }
+            
+            updateScore();
+            setTimeout(nextQuestion, 2000);
+        }
+
+        function selectGraderAnswer(answerIndex) {
+            stopTimer();
+            const question = currentGame.questions[currentGame.currentQuestionIndex];
+            const isCorrect = answerIndex === question.correctAnswer;
+            
+            if (isCorrect) {
+                currentGame.score += 1000;
+                showToast('✅ Correct! You ARE smarter than a 5th grader!', 'success');
+            } else {
+                showToast(`❌ Wrong! Correct answer: ${question.answers[question.correctAnswer]}`, 'error');
+            }
+            
+            updateScore();
+            setTimeout(nextQuestion, 2000);
+        }
+
+        // Lifeline and help functions
+        function useLifeline(type) {
+            const question = currentGame.questions[currentGame.currentQuestionIndex];
+            
+            switch (type) {
+                case '5050':
+                    // Remove 2 wrong answers
+                    const buttons = document.querySelectorAll('#game-content button[onclick^="selectMillionaireAnswer"]');
+                    let wrongAnswers = [];
+                    buttons.forEach((button, index) => {
+                        if (index !== question.correctAnswer) {
+                            wrongAnswers.push({ button, index });
+                        }
+                    });
+                    
+                    // Remove 2 random wrong answers
+                    for (let i = 0; i < 2 && wrongAnswers.length > 0; i++) {
+                        const randomIndex = Math.floor(Math.random() * wrongAnswers.length);
+                        wrongAnswers[randomIndex].button.style.display = 'none';
+                        wrongAnswers.splice(randomIndex, 1);
+                    }
+                    
+                    event.target.disabled = true;
+                    event.target.textContent = 'Used';
+                    showToast('50:50 used! Two wrong answers removed.', 'info');
+                    break;
+                    
+                case 'phone':
+                    const confidence = Math.random() * 100;
+                    const friendAnswer = confidence > 30 ? question.answers[question.correctAnswer] : question.answers[Math.floor(Math.random() * question.answers.length)];
+                    showToast(`📞 Friend says: "I think it's ${friendAnswer}" (${Math.floor(confidence)}% confident)`, 'info');
+                    event.target.disabled = true;
+                    event.target.textContent = 'Used';
+                    break;
+                    
+                case 'audience':
+                    // Generate audience poll
+                    let poll = [0, 0, 0, 0];
+                    poll[question.correctAnswer] = 40 + Math.floor(Math.random() * 40); // 40-80% for correct
+                    let remaining = 100 - poll[question.correctAnswer];
+                    
+                    for (let i = 0; i < 4; i++) {
+                        if (i !== question.correctAnswer && remaining > 0) {
+                            poll[i] = Math.floor(Math.random() * remaining);
+                            remaining -= poll[i];
+                        }
+                    }
+                    
+                    const pollText = question.answers.map((answer, i) => 
+                        `${String.fromCharCode(65 + i)}: ${poll[i]}%`
+                    ).join(', ');
+                    
+                    showToast(`👥 Audience Poll: ${pollText}`, 'info');
+                    event.target.disabled = true;
+                    event.target.textContent = 'Used';
+                    break;
+            }
+        }
+
+        function useStudentHelp(type) {
+            const question = currentGame.questions[currentGame.currentQuestionIndex];
+            
+            switch (type) {
+                case 'peek':
+                    const studentGuess = Math.random() > 0.3 ? question.correctAnswer : Math.floor(Math.random() * question.answers.length);
+                    showToast(`👀 Student chose: ${String.fromCharCode(65 + studentGuess)}. ${question.answers[studentGuess]}`, 'info');
+                    break;
+                    
+                case 'copy':
+                    selectGraderAnswer(question.correctAnswer);
+                    return;
+                    
+                case 'save':
+                    showToast('🛡️ Save activated! If you\'re wrong, the student might save you.', 'info');
+                    break;
+            }
+            
+            event.target.disabled = true;
+            event.target.textContent = 'Used';
+        }
+
+        // Game progression
+        function nextQuestion() {
+            currentGame.currentQuestionIndex++;
+            
+            if (currentGame.currentQuestionIndex >= currentGame.questions.length) {
+                endGame();
+                return;
+            }
+            
+            // Update question counter
+            document.getElementById('current-question').textContent = currentGame.currentQuestionIndex + 1;
+            
+            // Show next question based on mode
+            switch (currentGame.quiz.mode) {
+                case 'jeopardy':
+                    showJeopardyQuestion();
+                    break;
+                case 'family':
+                    showFamilyFeudQuestion();
+                    break;
+                case 'millionaire':
+                    showMillionaireQuestion();
+                    break;
+                case 'grader':
+                    showGraderQuestion();
+                    break;
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score-display').textContent = currentGame.score.toLocaleString();
+        }
+
+        function endGame() {
+            stopTimer();
+            const content = document.getElementById('game-content');
+            const config = modeConfigs[currentGame.quiz.mode];
+            
+            content.innerHTML = `
+                <div class="text-center text-white">
+                    <div class="text-6xl mb-6">${config.icon}</div>
+                    <h2 class="text-4xl font-bold mb-4">Game Complete!</h2>
+                    <div class="text-2xl mb-6">Final Score: ${currentGame.score.toLocaleString()}</div>
+                    <div class="text-lg mb-8">You answered ${currentGame.currentQuestionIndex} out of ${currentGame.questions.length} questions</div>
+                    <button onclick="backToDashboard()" class="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-3 rounded-lg text-xl font-bold hover:from-purple-700 hover:to-blue-700 transition-all duration-200">
+                        Back to Dashboard
+                    </button>
+                </div>
+            `;
+            
+            showToast('🎉 Congratulations on completing the quiz!', 'success');
+        }
+
+        function quitGame() {
+            if (currentGame.gameState === 'playing') {
+                // Show inline confirmation
+                const content = document.getElementById('game-content');
+                content.innerHTML = `
+                    <div class="text-center text-white">
+                        <div class="text-4xl mb-6">⚠️</div>
+                        <h2 class="text-3xl font-bold mb-4">Quit Game?</h2>
+                        <p class="text-xl mb-8">Are you sure you want to quit? Your progress will be lost.</p>
+                        <div class="flex justify-center space-x-4">
+                            <button onclick="confirmQuit()" class="bg-red-600 hover:bg-red-700 text-white px-8 py-3 rounded-lg text-xl font-bold">
+                                Yes, Quit Game
+                            </button>
+                            <button onclick="resumeGame()" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg text-xl font-bold">
+                                Continue Playing
+                            </button>
+                        </div>
+                    </div>
+                `;
+                stopTimer();
+            }
+        }
+
+        function confirmQuit() {
+            backToDashboard();
+            showToast('Game ended', 'info');
+        }
+
+        function resumeGame() {
+            // Resume the current question based on mode
+            switch (currentGame.quiz.mode) {
+                case 'jeopardy':
+                    showJeopardyQuestion();
+                    break;
+                case 'family':
+                    showFamilyFeudQuestion();
+                    break;
+                case 'millionaire':
+                    showMillionaireQuestion();
+                    break;
+                case 'grader':
+                    showGraderQuestion();
+                    break;
+            }
         }
 
         // Utility functions
@@ -2043,5 +2971,5 @@ Correct: B</code></pre>
         // Initialize app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'998c8049c0c1fddf',t:'MTc2MjE3OTUwOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'998c94fff0304112',t:'MTc2MjE4MDM1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
