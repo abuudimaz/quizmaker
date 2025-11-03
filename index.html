@@ -197,7 +197,22 @@
       </div>
      </div>
     </header><!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><!-- Welcome Section -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><!-- Configuration Banner -->
+     <div id="config-banner" class="config-banner mb-8" style="display: none;">
+      <div class="flex items-center justify-between">
+       <div class="flex items-center space-x-3">
+        <div class="text-2xl">
+         ⚙️
+        </div>
+        <div>
+         <h3 class="text-lg font-semibold text-amber-800">Setup Google Sheets Integration</h3>
+         <p class="text-amber-700">Connect to Google Sheets to sync your quizzes across devices and enable collaboration.</p>
+        </div>
+       </div>
+       <div class="flex space-x-3"><button onclick="showConfigModal()" class="bg-amber-600 text-white px-4 py-2 rounded-lg hover:bg-amber-700 transition-colors font-medium"> 🔧 Setup Now </button> <button onclick="hideConfigBanner()" class="text-amber-600 hover:text-amber-800 text-xl">×</button>
+       </div>
+      </div>
+     </div><!-- Welcome Section -->
      <div class="text-center mb-12">
       <h2 id="welcome-message" class="text-4xl font-bold text-gray-900 mb-4">Create amazing quiz shows in minutes!</h2>
       <p class="text-xl text-gray-600 max-w-2xl mx-auto">Build engaging quizzes with multiple game show formats: Jeopardy, Family Feud, Millionaire, and more!</p>
@@ -506,10 +521,10 @@
         let quizSettings = {};
         let questionCount = 0;
 
-        // Google Sheets Configuration - Pre-configured
+        // Google Sheets Configuration - Load from localStorage or use defaults
         let GOOGLE_CONFIG = {
-            API_KEY: 'AIzaSyA--2931_lk0PrluDyLsm6-hOq18cdnQO0',
-            SHEET_ID: '1_KIz425AcWRE2sTp6g-BvMU3xROIlzOO-RaAmFE10ys',
+            API_KEY: localStorage.getItem('google-api-key') || '',
+            SHEET_ID: localStorage.getItem('google-sheet-id') || '',
             RANGE: 'Sheet1!A:H',
             DISCOVERY_DOC: 'https://sheets.googleapis.com/$discovery/rest?version=v4'
         };
@@ -750,6 +765,7 @@
             async init() {
                 if (!GOOGLE_CONFIG.API_KEY || !GOOGLE_CONFIG.SHEET_ID) {
                     console.log('Google Sheets not configured, using localStorage');
+                    showConfigBanner();
                     return { isOk: false, error: 'Not configured' };
                 }
 
@@ -757,6 +773,7 @@
                     // Check if gapi is available
                     if (typeof gapi === 'undefined') {
                         console.log('Google API library not loaded, using localStorage');
+                        showConfigBanner();
                         return { isOk: false, error: 'Google API not available' };
                     }
 
@@ -764,7 +781,7 @@
                     await new Promise((resolve, reject) => {
                         const timeout = setTimeout(() => {
                             reject(new Error('gapi.load timeout'));
-                        }, 5000);
+                        }, 10000); // Increased timeout
                         
                         gapi.load('client', () => {
                             clearTimeout(timeout);
@@ -779,16 +796,23 @@
                             discoveryDocs: [GOOGLE_CONFIG.DISCOVERY_DOC]
                         }),
                         new Promise((_, reject) => 
-                            setTimeout(() => reject(new Error('Client init timeout')), 5000)
+                            setTimeout(() => reject(new Error('Client init timeout')), 10000) // Increased timeout
                         )
                     ]);
 
+                    // Test connection by trying to read the sheet
+                    const testResponse = await gapi.client.sheets.spreadsheets.values.get({
+                        spreadsheetId: GOOGLE_CONFIG.SHEET_ID,
+                        range: 'Sheet1!A1:A1'
+                    });
+
                     this.isInitialized = true;
-                    console.log('Google Sheets API initialized successfully');
+                    console.log('Google Sheets API initialized and tested successfully');
                     return { isOk: true };
                 } catch (error) {
                     console.error('Failed to initialize Google Sheets API:', error);
                     this.isInitialized = false;
+                    showConfigBanner();
                     return { isOk: false, error };
                 }
             }
@@ -846,71 +870,40 @@
                 }
             }
 
-            async saveQuiz(quiz) {
-                console.log('GoogleSheetsAPI.saveQuiz called with:', quiz);
-                
-                // Always save to localStorage first
-                const localResult = this.saveToLocalStorage(quiz);
-                console.log('Local save result:', localResult);
+async saveQuiz(quiz) {
+  console.log('Custom saveQuiz via Google Apps Script called with:', quiz);
 
-                if (!this.isInitialized) {
-                    console.log('Google Sheets not initialized, using localStorage only');
-                    return { isOk: true };
-                }
+  // 1️⃣ Simpan ke localStorage tetap dilakukan
+  const localResult = this.saveToLocalStorage(quiz);
+  console.log('Local save result:', localResult);
 
-                try {
-                    // First, get current data to find if quiz exists
-                    const currentQuizzes = await this.loadQuizzes();
-                    const existingIndex = currentQuizzes.findIndex(q => q.id === quiz.id);
+  // 2️⃣ Kirim ke Google Apps Script
+  try {
+    const response = await fetch('https://script.google.com/macros/s/AKfycbzKtYjX_KSTCbG3BaHmrz1WyiXqypy3ugiKpEbuxGd3_LYgSYF6Z9XVpKNLIKovxQUUEg/exec', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(quiz)
+    });
 
-                    const row = [
-                        quiz.id,
-                        quiz.title,
-                        quiz.description,
-                        quiz.mode,
-                        quiz.settings,
-                        quiz.questions,
-                        quiz.created_at,
-                        quiz.question_count
-                    ];
+    const result = await response.json();
+    console.log('Apps Script response:', result);
 
-                    console.log('Saving row to Google Sheets:', row);
-
-                    if (existingIndex >= 0) {
-                        // Update existing row (add 2 to account for header and 0-based index)
-                        const rowNumber = existingIndex + 2;
-                        console.log('Updating existing row:', rowNumber);
-                        await gapi.client.sheets.spreadsheets.values.update({
-                            spreadsheetId: GOOGLE_CONFIG.SHEET_ID,
-                            range: `Sheet1!A${rowNumber}:H${rowNumber}`,
-                            valueInputOption: 'RAW',
-                            resource: {
-                                values: [row]
-                            }
-                        });
-                    } else {
-                        // Append new row
-                        console.log('Appending new row to Google Sheets');
-                        await gapi.client.sheets.spreadsheets.values.append({
-                            spreadsheetId: GOOGLE_CONFIG.SHEET_ID,
-                            range: 'Sheet1!A:H',
-                            valueInputOption: 'RAW',
-                            resource: {
-                                values: [row]
-                            }
-                        });
-                    }
-
-                    updateSyncStatus('synced');
-                    console.log('Successfully saved to Google Sheets');
-                    return { isOk: true };
-                } catch (error) {
-                    console.error('Failed to save to Google Sheets:', error);
-                    showToast('Saved locally, sync to Google Sheets failed', 'warning');
-                    updateSyncStatus('error');
-                    return { isOk: true }; // Still return success since we saved locally
-                }
-            }
+    if (result.status === 'ok') {
+      showToast('☁️ Quiz saved to Google Sheet successfully!', 'success');
+      updateSyncStatus('synced');
+      return { isOk: true };
+    } else {
+      showToast(`⚠️ Failed to save to Google Sheet: ${result.message}`, 'warning');
+      updateSyncStatus('error');
+      return { isOk: false };
+    }
+  } catch (error) {
+    console.error('Error saving to Google Apps Script:', error);
+    showToast('💾 Saved locally. Sync failed — check script URL.', 'error');
+    updateSyncStatus('error');
+    return { isOk: true }; // tetap return true karena local save berhasil
+  }
+}
 
             async deleteQuiz(quizId) {
                 // Always delete from localStorage first
@@ -1016,6 +1009,16 @@
 
         function hideConfigModal() {
             document.getElementById('config-modal').classList.add('hidden');
+        }
+
+        function showConfigBanner() {
+            const banner = document.getElementById('config-banner');
+            const hidePreference = localStorage.getItem('hide-config-banner');
+            
+            // Only show if user hasn't hidden it and no valid config exists
+            if (!hidePreference && (!GOOGLE_CONFIG.API_KEY || !GOOGLE_CONFIG.SHEET_ID)) {
+                banner.style.display = 'block';
+            }
         }
 
         function hideConfigBanner() {
@@ -2971,5 +2974,5 @@ Correct: B</code></pre>
         // Initialize app when DOM is loaded
         document.addEventListener('DOMContentLoaded', initApp);
     </script>
- <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'998c94fff0304112',t:'MTc2MjE4MDM1Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'998ca104161e1dad',t:'MTc2MjE4MDg0OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
